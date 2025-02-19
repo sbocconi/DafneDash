@@ -1,0 +1,59 @@
+/* styles.css */
+
+h1 {
+    color: black;
+    font-size: 32px;
+    font-weight: normal;
+    font-family: "Arial", sans-serif;
+    text-align: center
+}
+
+h2 {
+    color: black;
+    font-size: 24px;
+    font-weight: normal;
+    font-family: "Arial", sans-serif;
+    text-align: center
+}
+
+h3 {
+    color: black;
+    font-size: 16px;
+    font-weight: normal;
+    font-family: "Arial", sans-serif;
+}
+
+.reg-slider {
+    width: 85%;
+    margin-left: 5em;
+}
+
+.reg-slider .rc-slider-handle {
+    border: 0;
+    background-color: #77b0b1
+}
+
+.reg-slider .rc-slider-rail {
+    background-color: #ededed;
+    /* #ededed grey */
+}
+.reg-slider .rc-slider-dot {
+    border: 0;
+    background-color: grey;
+    /* grey */
+}
+
+.reg-slider .rc-slider-track {
+    background-color: darkgrey
+}
+
+.reg-slider .rc-slider-dot.rc-slider-dot-active {
+    background-color: black
+}
+
+.reg-slider .rc-slider-mark-text {
+    color: black;
+    font-size: 14px;
+    font-weight: normal;
+    font-family: "Arial", sans-serif;
+}
