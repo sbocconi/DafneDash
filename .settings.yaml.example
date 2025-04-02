@@ -1,0 +1,7 @@
+keycloak:
+  server_url: 
+  realm: 
+  client_id: 
+  client_secret: 
+  username: 
+  password: 

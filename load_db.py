@@ -9,7 +9,7 @@ from pathlib import Path
 import tempfile
 import os
 
-from datadumps import read_xls
+from DafneDash.filedumps import read_xls
 
 DATA_PATH = '../DataExports/'
 TMPLT_FILE = './load_db_tmpl.sql'

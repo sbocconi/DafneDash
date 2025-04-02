@@ -6,7 +6,9 @@ from datetime import datetime, timedelta
 import glob
 from pathlib import Path
 
-from datadumps import DataDumps
+from filedumps import FileDumps
+from apidumps import APIDumps
+from metricsdata import MetricsData
 
 REG_TL_ID = "registrations_tl"
 SLD_ID = "date-slider"
@@ -23,8 +25,8 @@ class Slider:
                     dcc.RangeSlider(
                         allowCross=False,
                         id=SLD_ID,
-                        min=DataDumps.min_ts(),
-                        max=DataDumps.max_ts(),
+                        min=FileDumps.min_ts(),
+                        max=FileDumps.max_ts(),
                         marks = self.get_marks(),
                         updatemode = 'drag',
                         step = None,
@@ -45,7 +47,7 @@ class Slider:
         # start_date = min_date()
         # end_date = max_date()
         # months = pd.date_range(start_date, end_date, freq='MS')
-        months = pd.date_range(DataDumps.min_ts()*10**9, DataDumps.max_ts()*10**9, freq='MS')
+        months = pd.date_range(FileDumps.min_ts()*10**9, FileDumps.max_ts()*10**9, freq='MS')
 
         # breakpoint()
         timestamps = months.view('int64') // 10**9
@@ -75,8 +77,8 @@ class RegistrationGraph:
 
     def registrations_tl_updt(self,tss):
         if tss == None:
-            start = DataDumps.min_ts()
-            end = DataDumps.max_ts()
+            start = FileDumps.min_ts()
+            end = FileDumps.max_ts()
         else:
             start = tss[0]
             end = tss[1]
@@ -105,7 +107,7 @@ class RegistrationGraph:
               annotation_text=event.name, annotation_position="top left",
               fillcolor=self.UC1_COL if event.UC == 1 else self.UC2_COL if event.UC == 2 else self.UC3_COL, opacity=0.20, line_width=0)
         
-        if start == DataDumps.min_ts() and end == DataDumps.max_ts():
+        if start == FileDumps.min_ts() and end == FileDumps.max_ts():
             fig.add_hline(y=200, line_dash="dashdot", line_width=0.5, line_color=self.TOT_COL,
                 annotation_text="KPI 12: Total Nr. Users", 
                 annotation_position="bottom left",
@@ -144,14 +146,18 @@ class RegistrationGraph:
 
 def main(dir, event):
     # Initialize the app
-    app = Dash(__name__)
+    
+    metr_data = MetricsData()
 
-    DataDumps.init(dir, event)
-    slider = Slider()
-    reg_graph = RegistrationGraph(DataDumps.get_data('user-registrations'), DataDumps.get_data(event), app)
-    
-    
+    FileDumps.init(dir, event, metr_data)
+    APIDumps.init(metr_data)
+    # breakpoint()
+
+    app = Dash(__name__)
+    reg_graph = RegistrationGraph(metr_data.get_data('user-registrations'), metr_data.get_data(event), app)
+        
     # App layout
+    slider = Slider()
     app.layout = html.Div(
         [
             html.H1(
@@ -163,7 +169,7 @@ def main(dir, event):
         ]
     )
     
-    DataDumps.all_used()
+    metr_data.all_used()
     app.run(debug=True)
 
     
