@@ -1,11 +1,11 @@
 import pandas as pd # type: ignore
-from datetime import datetime, timedelta
 import requests
 from requests.exceptions import RequestException
 
 from datadumps import DataDumps, read_yaml
 from metricsdata import MetricsData
-
+from globals import TOOLS_KEY, MARKETPLACE_KEY
+from dafnekeycloak import DafneKeycloak
 
 class APIDumps(DataDumps):
 
@@ -16,11 +16,15 @@ class APIDumps(DataDumps):
     def init(cls, metr_data):
         cls.set_metric_data(metr_data)
         cls.read_tools_data()
+        # breakpoint()
+        cls.token = DafneKeycloak().get_access_token()
+        cls.read_marketplace_data()
 
     @classmethod
     def do_request(cls, url, headers={}, data={}):
         try:
             response = requests.request("GET", url, headers=headers, data=data)
+            # breakpoint()
             return response.json()
         except RequestException as e:
             print(e)
@@ -43,16 +47,41 @@ class APIDumps(DataDumps):
                     data = []
                     for usage in response['usages']:
                         username = usage['username'] if tool[f'{tool_name}']['encoded_users'] else MetricsData.encode_user(usage['username'])
-                        date = cls.convert_date_frmt(usage['timestamp'])
+                        date = cls.convert_date_frmt(usage['timestamp'],DataDumps.API_DT_FRMT, DataDumps.CNT_DT_FRMT)
                         data.append([username,date])
-                    cls.set_keyed_data(tool_name, data)
+                    cls.set_keyed_data(TOOLS_KEY, tool_name, data)
                     # breakpoint()
                 except Exception as e:
                     print(e)
                     continue
             else:
                 raise Exception('Auth request not yet implemented')
-
+            
     @classmethod
-    def convert_date_frmt(cls, date_str):
-        return datetime.strptime(date_str, DataDumps.API_DT_FRMT).strftime(DataDumps.FILE_DT_FRMT)
+    def read_marketplace_data(cls):
+        settings = read_yaml()['marketplace']
+        headers = {
+            'Accept': 'application/json',
+            'Authorization': f'Bearer {cls.token}'
+        }
+        mp_api_url = settings['url']
+        for mp_api in settings['api']:
+            mp_api_name = next(iter(mp_api))
+            mp_api_endpoint = mp_api[f'{mp_api_name}']['endpoint']
+            # breakpoint()
+
+            try:
+                response = cls.do_request(f"{mp_api_url}/{mp_api_endpoint}", headers=headers)
+                data = []
+                # breakpoint()
+                for item in response:
+                    username = item['owner_name'] if mp_api[f'{mp_api_name}']['encoded_users'] else MetricsData.encode_user(item['owner_name'])
+                    date = cls.convert_date_frmt(item['modified'],DataDumps.API_DT_FRMT, DataDumps.CNT_DT_FRMT)
+                    data.append([username,date])
+                cls.set_keyed_data(MARKETPLACE_KEY, mp_api_name, data)
+                
+            except Exception as e:
+                print(e)
+                continue
+
+

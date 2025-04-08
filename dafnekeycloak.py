@@ -8,7 +8,7 @@ class DafneKeycloak:
     token = {}
 
     def __init__(self):
-        pass
+        self.read_token()
     
     @classmethod
     def read_token(cls):
@@ -21,6 +21,8 @@ class DafneKeycloak:
                                  )
 
         cls.token = keycloak_openid.token(settings['username'], settings['password'], scope="openid")
-        breakpoint()
-        print(f"Token received from Keycloak:\n {cls.token['access_token']}\n\n")
+
+    @classmethod
+    def get_access_token(cls):
+        return cls.token['access_token']
 

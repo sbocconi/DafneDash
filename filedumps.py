@@ -5,37 +5,55 @@ from pathlib import Path
 
 from datadumps import DataDumps
 from metricsdata import MetricsData
+from globals import DATAEXP_DIR, CNTMGMT_KEY, TOOLS_KEY, EVENT_FLNM
 
 class FileDumps(DataDumps):
 
-    dir = ""
-    event = ""
     
     def __init__(self):
         pass
         
     @classmethod
-    def init(cls, dir, event, metr_data):
-        cls.xls_dir = dir
-        cls.event = event
+    def init(cls, metr_data):
         cls.set_metric_data(metr_data)
-        cls.read_xls()
+        cls.read_cntmgmt()
         cls.read_events()
         cls.assign_UC()
+        cls.read_certhtools()
 
     @classmethod
-    def read_xls(cls, ):
-        xlsxfiles = [file for file in glob.iglob(f'{cls.xls_dir}/*.xlsx', recursive=False)]
+    def read_cntmgmt(cls):
+        xlsxfiles = [file for file in glob.iglob(f'{DATAEXP_DIR}/{CNTMGMT_KEY}/*.xlsx', recursive=False)]
         for xlsxfile in xlsxfiles:
             key = Path(xlsxfile).stem
-            cls.set_keyed_data(key, pd.read_excel(xlsxfile).dropna(axis=1, how='all'))
+            cls.set_keyed_data(CNTMGMT_KEY, key, pd.read_excel(xlsxfile).dropna(axis=1, how='all'))
+    
+    @classmethod
+    def read_certhtools(cls):
+        xlsxfiles = [file for file in glob.iglob(f'{DATAEXP_DIR}/{TOOLS_KEY}/*.xlsx', recursive=False)]
+        for xlsxfile in xlsxfiles:
+            content = pd.read_excel(xlsxfile).dropna(axis=1, how='all')
+            data = {}
+            for row in content.itertuples():
+                if row.Index == 0:
+                    continue
+                username = MetricsData.encode_user(row[1])
+                key = row[2]
+                use_date = cls.convert_date_frmt(row[3],DataDumps.CERTL_DT_FRMT, DataDumps.CNT_DT_FRMT)
+                if not key in data:
+                    data[f'{key}'] = []
+                data[f'{key}'].append([username,use_date])
+            
+            for key in data.keys():
+                cls.set_keyed_data(TOOLS_KEY, key, data[f'{key}'])
+            # breakpoint()
 
     @classmethod
     def read_events(cls):
         
-        cls.set_keyed_data(cls.event, pd.read_csv(f'{cls.xls_dir}/{cls.event}.csv', parse_dates=['start','end']))
+        cls.set_keyed_data(CNTMGMT_KEY, EVENT_FLNM, pd.read_csv(f'{DATAEXP_DIR}/{EVENT_FLNM}.csv', parse_dates=['start','end']))
         
-        data = cls.get_keyed_data(cls.event)
+        data = cls.get_keyed_data(CNTMGMT_KEY, EVENT_FLNM)
         # Check there are no overlapping periods
         len_df = data.shape[0]
         for idx1, row1 in data.iterrows():
@@ -52,10 +70,10 @@ class FileDumps(DataDumps):
 
     @classmethod
     def assign_UC(cls):
-        data = cls.get_keyed_data('user-registrations')
-        data['registrationTime'] = pd.to_datetime(data['registrationTime'], format=cls.FILE_DT_FRMT)
+        data = cls.get_keyed_data(CNTMGMT_KEY, 'user-registrations')
+        data['registrationTime'] = pd.to_datetime(data['registrationTime'], format=cls.CNT_DT_FRMT)
         ucs = []
-        event_data = cls.get_keyed_data(cls.event)
+        event_data = cls.get_keyed_data(CNTMGMT_KEY, EVENT_FLNM)
         for reg_row in data.itertuples():
             found = False
             # breakpoint()
@@ -73,12 +91,12 @@ class FileDumps(DataDumps):
 
     @classmethod
     def min_date(cls):
-        data = cls.get_keyed_data('user-registrations')
+        data = cls.get_keyed_data(CNTMGMT_KEY, 'user-registrations')
         return data.registrationTime.min().replace(day=1,hour=0,minute=0,second=0)
     
     @classmethod
     def max_date(cls):
-        data = cls.get_keyed_data('user-registrations')
+        data = cls.get_keyed_data(CNTMGMT_KEY, 'user-registrations')
         last_day = data.registrationTime.max().replace(day=pd.Timestamp(data.registrationTime.max()).days_in_month)
         first_day = last_day + timedelta(days=1)
         return first_day.replace(day=1,hour=0,minute=0,second=0)
@@ -94,6 +112,6 @@ class FileDumps(DataDumps):
     
     @classmethod
     def parse_date(cls, date_str):
-        return datetime.strptime(date_str, cls.FILE_DT_FRMT)
+        return datetime.strptime(date_str, cls.CNT_DT_FRMT)
 
 
