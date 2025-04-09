@@ -95,11 +95,15 @@ class FileDumps(DataDumps):
         return data.registrationTime.min().replace(day=1,hour=0,minute=0,second=0)
     
     @classmethod
-    def max_date(cls):
-        data = cls.get_keyed_data(CNTMGMT_KEY, 'user-registrations')
-        last_day = data.registrationTime.max().replace(day=pd.Timestamp(data.registrationTime.max()).days_in_month)
+    def start_following_month(cls, date):
+        last_day = date.replace(day=pd.Timestamp(date).days_in_month)
         first_day = last_day + timedelta(days=1)
         return first_day.replace(day=1,hour=0,minute=0,second=0)
+
+    @classmethod
+    def max_date(cls):
+        data = cls.get_keyed_data(CNTMGMT_KEY, 'user-registrations')        
+        return cls.start_following_month(data.registrationTime.max())
         # return parse_date(data['user-registrations'].registrationTime.max()).replace(day=pd.Timestamp(data['user-registrations'].registrationTime.max()).days_in_month,hour=23,minute=59,second=59)
 
     @classmethod
@@ -109,6 +113,11 @@ class FileDumps(DataDumps):
     @classmethod
     def max_ts(cls):
         return int(pd.Timestamp(cls.max_date()).timestamp())
+    
+    @classmethod
+    def now(cls):
+        return int(cls.start_following_month(pd.Timestamp.now()).timestamp())
+    
     
     @classmethod
     def parse_date(cls, date_str):
