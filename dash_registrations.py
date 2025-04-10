@@ -2,7 +2,7 @@ from dash import Dash, html, dash_table, dependencies, dcc, callback, Output, In
 import pandas as pd # type: ignore
 import plotly.express as px # type: ignore
 
-from globals import REG_TL_ID, SLD_ID
+from globals import REG_TL_ID, SLD_ID, thumbs
 
 class DashRegistrations:
     TOT_COL = 'black'
@@ -13,6 +13,10 @@ class DashRegistrations:
     def __init__(self, reg_data, evt_data, min, max, app):
         self.reg_data = reg_data
         self.evt_data = evt_data
+        self.total_reg_nr = len(self.reg_data)
+        self.uc1_reg_nr = len(self.reg_data.loc[self.reg_data['UC'] == 1])
+        self.uc2_reg_nr = len(self.reg_data.loc[self.reg_data['UC'] == 2])
+        self.uc3_reg_nr = len(self.reg_data.loc[self.reg_data['UC'] == 3])
         self.min = min
         self.max = max
         self.app = app
@@ -53,31 +57,31 @@ class DashRegistrations:
               annotation_text=event.name, annotation_position="top left",
               fillcolor=self.UC1_COL if event.UC == 1 else self.UC2_COL if event.UC == 2 else self.UC3_COL, opacity=0.20, line_width=0)
         
-        if start == self.min and end == self.max:
-            fig.add_hline(y=200, line_dash="dashdot", line_width=0.5, line_color=self.TOT_COL,
-                annotation_text="KPI 12: Total Nr. Users", 
-                annotation_position="bottom left",
-                annotation_font_size=15,
-                annotation_font_color=self.TOT_COL
-                )
-            fig.add_hline(y=100, line_dash="dashdot", line_width=0.5, line_color=self.TOT_COL,
-                annotation_text="KPI 15: UC1 Nr. Users",
-                annotation_position="bottom left",
-                annotation_font_size=15,
-                annotation_font_color=self.UC1_COL
-                )
-            fig.add_hline(y=50, line_dash="dashdot", line_width=0.5, line_color=self.TOT_COL,
-                annotation_text="KPI 16: UC2 Nr. Users",
-                annotation_position="bottom left",
-                annotation_font_size=15,
-                annotation_font_color=self.UC2_COL
-                )
-            fig.add_hline(y=50, line_dash="dashdot", line_width=0.5, line_color=self.TOT_COL,
-                annotation_text="KPI 17: UC3 Nr. Users",
-                annotation_position="bottom right",
-                annotation_font_size=15,
-                annotation_font_color=self.UC3_COL
-                )
+        # if start == self.min and end == self.max:
+        #     fig.add_hline(y=200, line_dash="dashdot", line_width=0.5, line_color=self.TOT_COL,
+        #         annotation_text="KPI 12: Total Nr. Users", 
+        #         annotation_position="bottom left",
+        #         annotation_font_size=15,
+        #         annotation_font_color=self.TOT_COL
+        #         )
+        #     fig.add_hline(y=100, line_dash="dashdot", line_width=0.5, line_color=self.TOT_COL,
+        #         annotation_text="KPI 15: UC1 Nr. Users",
+        #         annotation_position="bottom left",
+        #         annotation_font_size=15,
+        #         annotation_font_color=self.UC1_COL
+        #         )
+        #     fig.add_hline(y=50, line_dash="dashdot", line_width=0.5, line_color=self.TOT_COL,
+        #         annotation_text="KPI 16: UC2 Nr. Users",
+        #         annotation_position="bottom left",
+        #         annotation_font_size=15,
+        #         annotation_font_color=self.UC2_COL
+        #         )
+        #     fig.add_hline(y=50, line_dash="dashdot", line_width=0.5, line_color=self.TOT_COL,
+        #         annotation_text="KPI 17: UC3 Nr. Users",
+        #         annotation_position="bottom right",
+        #         annotation_font_size=15,
+        #         annotation_font_color=self.UC3_COL
+        #         )
             
         return fig
 
@@ -86,6 +90,10 @@ class DashRegistrations:
         return html.Div(
                 [
                     html.H2("User Registrations"),
+                    html.H3(f"{thumbs(self.total_reg_nr>200)} KPI_12 At least 200 participants in the pilots"),
+                    html.H3(f"{thumbs(self.uc1_reg_nr>100)} KPI_15 Use Case 1: At least 100 registered users"),
+                    html.H3(f"{thumbs(self.uc2_reg_nr>50)} KPI_16 Use Case 2: At least 50 registered users"),
+                    html.H3(f"{thumbs(self.uc3_reg_nr>50)} KPI_17 Use Case 3: At least 50 registered users"),
                     dcc.Graph(id=REG_TL_ID)
                 ],
             )

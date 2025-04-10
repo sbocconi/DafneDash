@@ -8,26 +8,33 @@ from dash_slider import DashSlider
 from dash_registrations import DashRegistrations
 from dash_tools import DashTools
 from dash_marketplace import DashMarketPlace
+from dash_creators import DashCreators
 
 def main():
     # Initialize the app
     
-    metr_data = MetricsData()
+    metr_data = MetricsData.get_metrics()
+    # breakpoint()
+    if metr_data is None:
+        metr_data = MetricsData()
 
-    FileDumps.init(metr_data)
-    APIDumps.init(metr_data)
+        FileDumps.init(metr_data)
+        APIDumps.init(metr_data)
+        metr_data.save_data()
     
-
+    metr_data.max_date()
     app = Dash(__name__)
-    reg_graph = DashRegistrations(metr_data.get_data(CNTMGMT_KEY,'user-registrations'), metr_data.get_data(CNTMGMT_KEY, EVENT_FLNM), FileDumps.min_ts(), FileDumps.now(), app)
-    marketplace_graph = DashMarketPlace(metr_data.get_data(MARKETPLACE_KEY), FileDumps.min_ts(), FileDumps.now(), app)
-    tools_graph = DashTools(metr_data.get_data(TOOLS_KEY), marketplace_graph.get_creators(), FileDumps.min_ts(), FileDumps.now(), app)
+    # breakpoint()
+    reg_graph = DashRegistrations(metr_data.get_data(CNTMGMT_KEY,'user-registrations'), metr_data.get_data(CNTMGMT_KEY, EVENT_FLNM), metr_data.min_ts(), metr_data.now(), app)
+    marketplace_graph = DashMarketPlace(metr_data.get_data(MARKETPLACE_KEY), metr_data.min_ts(), metr_data.now(), app)
+    creators_graph = DashCreators(metr_data.get_data(MARKETPLACE_KEY), metr_data.min_ts(), metr_data.now(), app)
+    tools_graph = DashTools(metr_data.get_data(TOOLS_KEY), marketplace_graph.get_creators(), metr_data.min_ts(), metr_data.now(), app)
     
     
     # breakpoint()
 
     # App layout
-    slider = DashSlider(FileDumps.min_ts(), FileDumps.now())
+    slider = DashSlider(metr_data.min_ts(), metr_data.now())
     app.layout = html.Div(
         [
             html.H1(
@@ -37,7 +44,7 @@ def main():
             reg_graph.as_html(),
             tools_graph.as_html(),
             marketplace_graph.as_html(),
-
+            creators_graph.as_html(),
         ]
     )
     

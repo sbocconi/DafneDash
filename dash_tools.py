@@ -2,13 +2,14 @@ from dash import Dash, html, dash_table, dependencies, dcc, callback, Output, In
 import pandas as pd # type: ignore
 import plotly.express as px # type: ignore
 
-from globals import SLD_ID, TOOLS_GRAPH_ID
+from globals import SLD_ID, TOOLS_GRAPH_ID, thumbs
 
 class DashTools:
     TOT_COL = 'black'
 
     def __init__(self, tools_data, creators, min, max, app):
-        self.tools_data = DashTools.to_pd(tools_data)
+        self.tools_data = DashTools.flatten_pd(tools_data)
+        # breakpoint()
         self.creators = creators
         self.usage_tools_per_creator()
         # breakpoint()
@@ -21,11 +22,15 @@ class DashTools:
             )(self.tools_tl_updt)
     
     @classmethod
-    def to_pd(cls, data):
+    def flatten_pd(cls, data):
         df = pd.DataFrame(columns=["tool","user", "access_date"])
         for key in data.keys():
-            for arr in data[key]['data']:
-                df.loc[len(df)] = [key, arr[0], arr[1]]
+            for row in data[key]['data'].itertuples():
+                # breakpoint()
+                df.loc[len(df)] = [key,row.user,row.access_date]
+            # df = pd.concat([df,data[key]['data']])
+            # df.loc[len(df)] = [key, arr[0], arr[1]]
+        # breakpoint()
         return df
     
     
@@ -78,6 +83,7 @@ class DashTools:
         return html.Div(
                 [
                     html.H2("Tools Usage"),
+                    html.H3(f"{thumbs(self.tot_users_zero==0 and self.tot_users_one==0)} KPI_6 Usage of provided production components/ workflows > 1 per creator"),
                     html.P(f"Total creators: {len(self.creators)}, average tool usage per creator: {self.avg_usage_per_creator}"),
                     html.P(f"Users with no tool usage: {self.tot_users_zero}, one usage: {self.tot_users_one}, more usages: {self.tot_users_more}"),
                     dcc.Graph(id=TOOLS_GRAPH_ID)

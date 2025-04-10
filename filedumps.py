@@ -38,14 +38,14 @@ class FileDumps(DataDumps):
                 if row.Index == 0:
                     continue
                 username = MetricsData.encode_user(row[1])
-                key = row[2]
+                tool = row[2]
                 use_date = cls.convert_date_frmt(row[3],DataDumps.CERTL_DT_FRMT, DataDumps.CNT_DT_FRMT)
-                if not key in data:
-                    data[f'{key}'] = []
-                data[f'{key}'].append([username,use_date])
-            
+                if not tool in data:
+                    data[f'{tool}'] = []
+                data[f'{tool}'].append([username,use_date])
+                # data.append([key,username,use_date])
             for key in data.keys():
-                cls.set_keyed_data(TOOLS_KEY, key, data[f'{key}'])
+                cls.set_keyed_data(TOOLS_KEY, key, cls.get_tools_df(data[f'{key}']))
             # breakpoint()
 
     @classmethod
@@ -78,6 +78,7 @@ class FileDumps(DataDumps):
             found = False
             # breakpoint()
             for uc_row in event_data.itertuples():
+                # breakpoint()
                 if uc_row.start <= reg_row.registrationTime <= uc_row.end:
                     # breakpoint()
                     ucs.append(uc_row.UC)
@@ -88,36 +89,6 @@ class FileDumps(DataDumps):
                 
         data['UC'] = ucs
         # breakpoint()
-
-    @classmethod
-    def min_date(cls):
-        data = cls.get_keyed_data(CNTMGMT_KEY, 'user-registrations')
-        return data.registrationTime.min().replace(day=1,hour=0,minute=0,second=0)
-    
-    @classmethod
-    def start_following_month(cls, date):
-        last_day = date.replace(day=pd.Timestamp(date).days_in_month)
-        first_day = last_day + timedelta(days=1)
-        return first_day.replace(day=1,hour=0,minute=0,second=0)
-
-    @classmethod
-    def max_date(cls):
-        data = cls.get_keyed_data(CNTMGMT_KEY, 'user-registrations')        
-        return cls.start_following_month(data.registrationTime.max())
-        # return parse_date(data['user-registrations'].registrationTime.max()).replace(day=pd.Timestamp(data['user-registrations'].registrationTime.max()).days_in_month,hour=23,minute=59,second=59)
-
-    @classmethod
-    def min_ts(cls):
-        return int(pd.Timestamp(cls.min_date()).timestamp())
-
-    @classmethod
-    def max_ts(cls):
-        return int(pd.Timestamp(cls.max_date()).timestamp())
-    
-    @classmethod
-    def now(cls):
-        return int(cls.start_following_month(pd.Timestamp.now()).timestamp())
-    
     
     @classmethod
     def parse_date(cls, date_str):

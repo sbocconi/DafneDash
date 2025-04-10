@@ -52,7 +52,7 @@ class APIDumps(DataDumps):
                         username = usage['username'] if tool[f'{tool_name}']['encoded_users'] else MetricsData.encode_user(usage['username'])
                         date = cls.convert_date_frmt(usage['timestamp'],DataDumps.SYNTL_DT_FRMT, DataDumps.CNT_DT_FRMT)
                         data.append([username,date])
-                    cls.set_keyed_data(TOOLS_KEY, tool_name, data)
+                    cls.set_keyed_data(TOOLS_KEY, tool_name, cls.get_tools_df(data))
                     # breakpoint()
                 except Exception as e:
                     print(e)
@@ -102,7 +102,7 @@ class APIDumps(DataDumps):
                     overall_rating = item['overall_rating'] if item['overall_rating'] is not None else 0
 
                     data.append([id, item_name, type, owner, creator, created_date, modified_date, nft, chainid, version, version_parent, license, overall_rating])
-                cls.set_keyed_data(MARKETPLACE_KEY, mp_api_name, data)
+                cls.set_keyed_data(MARKETPLACE_KEY, mp_api_name, cls.get_marketplace_df(data))
                 # breakpoint()
                 
             except Exception as e:

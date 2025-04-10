@@ -1,6 +1,7 @@
 import yaml
 from datetime import datetime, timedelta
 from pathlib import Path
+import pandas as pd
 
 def read_yaml():
     SETTINGS_FILE = '.settings.yaml'
@@ -39,5 +40,30 @@ class DataDumps:
         if type(date) == datetime:
             return date.strftime(frmt_out)    
         return datetime.strptime(date, frmt_in).strftime(frmt_out)
+    
+    @classmethod
+    def get_tools_df(cls, data):
+        df = pd.DataFrame(columns=["user", "access_date"])
+        # df = df.astype({"access_date": "datetime64[ns]"})
+        for tuple in data:
+            df.loc[len(df)] = tuple
+            breakpoint()
+        
+        df["access_date"] = pd.to_datetime(df["access_date"])
+        # breakpoint()
+        return df
+    
+    @classmethod
+    def get_marketplace_df(cls, data):
+        df = pd.DataFrame(columns=['id', 'name', 'type', 'owner','creator','created', 'modified', 'nft', 'chainid', 'version', 'version_parent', 'license', 'overall_rating'])
+        # df = df.astype({"created": "datetime64[ns]", "modified": "datetime64[ns]"})
+        for tuple in data:
+            df.loc[len(df)] = tuple
+            breakpoint()
+        df["created"] = pd.to_datetime(df["created"])
+        df["modified"] = pd.to_datetime(df["modified"])
+        return df
+    
+    
 
     
