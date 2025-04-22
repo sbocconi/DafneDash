@@ -47,23 +47,30 @@ class DataDumps:
         # df = df.astype({"access_date": "datetime64[ns]"})
         for tuple in data:
             df.loc[len(df)] = tuple
-            breakpoint()
+            # breakpoint()
         
         df["access_date"] = pd.to_datetime(df["access_date"])
         # breakpoint()
         return df
     
     @classmethod
-    def get_marketplace_df(cls, data):
-        df = pd.DataFrame(columns=['id', 'name', 'type', 'owner','creator','created', 'modified', 'nft', 'chainid', 'version', 'version_parent', 'license', 'overall_rating'])
+    def get_mp_items_df(cls, data):
+        df = pd.DataFrame(columns=['id', 'name', 'type', 'owner','creator','created', 'modified', 'nft', 'version', 'version_parent', 'license', 'overall_rating'])
         # df = df.astype({"created": "datetime64[ns]", "modified": "datetime64[ns]"})
+        # breakpoint()
         for tuple in data:
             df.loc[len(df)] = tuple
-            breakpoint()
+            # breakpoint()
         df["created"] = pd.to_datetime(df["created"])
         df["modified"] = pd.to_datetime(df["modified"])
         return df
     
-    
-
+    @classmethod
+    def get_mp_nfts_df(cls, data):
+        df = pd.DataFrame(columns=['id', 'name', 'type', 'creator', 'creator_name', 'price', 'royalty_value', 'token_id', 'chainid'])
+        df = df.astype({"creator_name": "str"})
+        for tuple in data:
+            df.loc[len(df)] = tuple
+            # breakpoint()
+        return df
     

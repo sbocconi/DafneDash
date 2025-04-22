@@ -1,4 +1,6 @@
 import pandas as pd # type: ignore
+import numpy as np
+
 import requests
 from requests.exceptions import RequestException
 
@@ -18,7 +20,8 @@ class APIDumps(DataDumps):
         cls.read_tools_api_data()
         # breakpoint()
         cls.token = DafneKeycloak().get_access_token()
-        cls.read_marketplace_data()
+        cls.read_nft_items()
+        cls.read_marketplace_items()
 
     @classmethod
     def do_request(cls, url, headers={}, data={}):
@@ -59,54 +62,99 @@ class APIDumps(DataDumps):
                     continue
             else:
                 raise Exception('Auth request not yet implemented')
-            
+
     @classmethod
-    def read_marketplace_data(cls):
+    def get_header(cls, auth):
+        if auth:
+            return {
+                'Accept': 'application/json',
+                'Authorization': f'Bearer {cls.token}'
+            }
+        return {}
+     
+    @classmethod
+    def read_nft_items(cls):
         settings = read_yaml()['marketplace']
-        headers = {
-            'Accept': 'application/json',
-            'Authorization': f'Bearer {cls.token}'
-        }
+
         mp_api_url = settings['url']
-        for mp_api in settings['api']:
-            mp_api_name = next(iter(mp_api))
-            mp_api_endpoint = mp_api[f'{mp_api_name}']['endpoint']
-            # breakpoint()
+        
+        mp_api_name = 'nft_items'
+        mp_api = settings[f"{mp_api_name}"]
+        mp_api_endpoint = mp_api['endpoint']
+        headers = cls.get_header(mp_api['auth'])
+        # breakpoint()
 
-            try:
-                response = cls.do_request(f"{mp_api_url}/{mp_api_endpoint}", headers=headers)
-                data = []
-                for item in response:
-                    # breakpoint()
-                    id = item['id']
-                    item_name = item['name']
-                    type = item['type']
-                    owner = item['owner_name'] if mp_api[f'{mp_api_name}']['encoded_users'] else MetricsData.encode_user(item['owner_name'])
-                    created_date = cls.convert_date_frmt(item['created'],DataDumps.MP_DT_FRMT, DataDumps.CNT_DT_FRMT)
-                    modified_date = cls.convert_date_frmt(item['modified'],DataDumps.MP_DT_FRMT, DataDumps.CNT_DT_FRMT)
-                    nft = item['nft']
-                    if nft:
-                        # breakpoint()
-                        nft_response = cls.do_request(f"{mp_api_url}/nft/{nft}", headers=headers)
-                        if not nft_response['creator_name']:
-                            print(f"Warning: item {id} with nft {nft} has null creator name")
-                            creator = owner
-                        else:    
-                            creator = nft_response['creator_name'] if mp_api[f'{mp_api_name}']['encoded_users'] else MetricsData.encode_user(nft_response['creator_name'])
-                    else:
-                        creator = owner
-                    chainid = item['chainid']
-                    version = item['version']
-                    version_parent = item['version_parent']
-                    license = item['license']
-                    overall_rating = item['overall_rating'] if item['overall_rating'] is not None else 0
-
-                    data.append([id, item_name, type, owner, creator, created_date, modified_date, nft, chainid, version, version_parent, license, overall_rating])
-                cls.set_keyed_data(MARKETPLACE_KEY, mp_api_name, cls.get_marketplace_df(data))
+        try:
+            response = cls.do_request(f"{mp_api_url}/{mp_api_endpoint}", headers=headers)
+            data = []
+            for item in response:
                 # breakpoint()
-                
-            except Exception as e:
-                print(e)
-                continue
+                id = item['id']
+                item_name = item['name']
+                creator = item['creator']
+                if not item['creator_name']:
+                    print(f"Warning: nft {id} has null creator name, creator {creator}")
+                    creator_name = None
+                else:    
+                    creator_name = item['creator_name'] if mp_api['encoded_users'] else MetricsData.encode_user(item['creator_name'])
+                price = item['price']
+                royalty_value = item['royalty_value'] if item['royalty_value'] else np.nan
+                token_id = item['token_id']
+                chainid = item['chainid']
 
+                data.append([id, item_name, creator, creator, creator_name, price, royalty_value, token_id, chainid])
+            cls.set_keyed_data(MARKETPLACE_KEY, mp_api_name, cls.get_mp_nfts_df(data))
+            # breakpoint()
+            
+        except Exception as e:
+            print(e)
+            raise Exception(e)
 
+    @classmethod
+    def read_marketplace_items(cls):
+        settings = read_yaml()['marketplace']
+        
+        mp_api_url = settings['url']
+        
+        mp_api_name = 'marketplace_items'
+        mp_api = settings[f"{mp_api_name}"]
+        mp_api_endpoint = mp_api['endpoint']
+
+        headers = cls.get_header(mp_api['auth'])
+
+        nfts = cls.get_keyed_data(MARKETPLACE_KEY, 'nft_items')
+        # breakpoint()
+
+        try:
+            response = cls.do_request(f"{mp_api_url}/{mp_api_endpoint}", headers=headers)
+            data = []
+            for item in response:
+                # breakpoint()
+                id = item['id']
+                item_name = item['name']
+                type = item['type']
+                owner = item['owner_name'] if mp_api['encoded_users'] else MetricsData.encode_user(item['owner_name'])
+                created_date = cls.convert_date_frmt(item['created'],DataDumps.MP_DT_FRMT, DataDumps.CNT_DT_FRMT)
+                modified_date = cls.convert_date_frmt(item['modified'],DataDumps.MP_DT_FRMT, DataDumps.CNT_DT_FRMT)
+                nft = item['nft']
+                if nft:
+                    # breakpoint()
+                    creator = nfts.loc[nfts.id == nft]['creator_name'].item()
+                    if creator == None:
+                        print(f"Warning: nft {nft} has null creator name, assuming creator is owner {owner}")
+                        creator = owner
+                        # breakpoint()
+                else:
+                    creator = owner
+                version = item['version']
+                version_parent = item['version_parent']
+                license = item['license']
+                overall_rating = item['overall_rating'] if item['overall_rating'] is not None else 0
+
+                data.append([id, item_name, type, owner, creator, created_date, modified_date, nft, version, version_parent, license, overall_rating])
+            cls.set_keyed_data(MARKETPLACE_KEY, mp_api_name, cls.get_mp_items_df(data))
+            # breakpoint()
+            
+        except Exception as e:
+            print(e)
+            raise Exception(e)

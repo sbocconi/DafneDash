@@ -103,6 +103,7 @@ class DashMarketPlace:
         for creator in self.creators:
             items_per_creator = self.marketplace_data['marketplace_items']['data'].loc[self.marketplace_data['marketplace_items']['data']['creator'] == creator]
             if len(items_per_creator) == 0:
+                # breakpoint()
                 self.tot_users_zero = self.tot_users_zero + 1
             else:
                 if len(items_per_creator) == 1:
