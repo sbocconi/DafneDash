@@ -15,7 +15,8 @@ class DashCreators:
         # self.marketplace_data = DashMarketPlace.to_pd(marketplace_data)
         self.marketplace_data = marketplace_data
         # breakpoint()
-        self.creators = set(self.marketplace_data['marketplace_items']['data']['creator'])
+        self.all_creators = set(self.marketplace_data['marketplace_items']['data']['creator'])
+        self.daily_creators = self.get_daily_creators(min, max)
         # breakpoint()
         self.min = min
         self.max = max
@@ -26,7 +27,7 @@ class DashCreators:
             )(self.creators_tl_updt)
     
    
-    def token_generating_creators(self, start, end):
+    def get_daily_creators(self, start, end):
         df = pd.DataFrame(columns=['date','nr_creators'])
         start_date = pd.to_datetime(start, unit='s', utc=True)
         end_date = pd.to_datetime(end, unit='s', utc=True)
@@ -47,7 +48,11 @@ class DashCreators:
             start = tss[0]
             end = tss[1]
         # breakpoint()
-        daily_token_creators = self.token_generating_creators(start, end)
+
+        dt_idx = pd.DatetimeIndex(self.daily_creators['date']).view('int64') // 10**9
+        mask = (dt_idx > start) & (dt_idx <= end)
+        
+        daily_token_creators = self.daily_creators.loc[mask]
         
         # breakpoint()
         fig = px.line(daily_token_creators, x='date', y="nr_creators")
@@ -62,7 +67,7 @@ class DashCreators:
         # breakpoint()
         
         if start == self.min and end == self.max:
-            fig.add_hline(y=len(self.creators)/50*self.SCALING, line_dash="dashdot", line_width=0.5, line_color=self.TOT_COL,
+            fig.add_hline(y=len(self.all_creators)/50*self.SCALING, line_dash="dashdot", line_width=0.5, line_color=self.TOT_COL,
                 annotation_text="KPI_9 Creators generating tokens daily >2%", 
                 annotation_position="top left",
                 annotation_font_size=15,

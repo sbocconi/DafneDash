@@ -49,7 +49,7 @@ class DataDumps:
             df.loc[len(df)] = tuple
             # breakpoint()
         
-        df["access_date"] = pd.to_datetime(df["access_date"])
+        # df["access_date"] = pd.to_datetime(df["access_date"])
         # breakpoint()
         return df
     
@@ -61,8 +61,8 @@ class DataDumps:
         for tuple in data:
             df.loc[len(df)] = tuple
             # breakpoint()
-        df["created"] = pd.to_datetime(df["created"])
-        df["modified"] = pd.to_datetime(df["modified"])
+        # df["created"] = pd.to_datetime(df["created"])
+        # df["modified"] = pd.to_datetime(df["modified"])
         return df
     
     @classmethod

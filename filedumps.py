@@ -71,7 +71,8 @@ class FileDumps(DataDumps):
     @classmethod
     def assign_UC(cls):
         data = cls.get_keyed_data(CNTMGMT_KEY, 'user-registrations')
-        data['registrationTime'] = pd.to_datetime(data['registrationTime'], format=cls.CNT_DT_FRMT)
+        # data['registrationTime'] = pd.to_datetime(data['registrationTime'], format=cls.CNT_DT_FRMT)
+        # breakpoint()
         ucs = []
         event_data = cls.get_keyed_data(CNTMGMT_KEY, EVENT_FLNM)
         for reg_row in data.itertuples():

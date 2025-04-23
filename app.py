@@ -9,29 +9,32 @@ from dash_registrations import DashRegistrations
 from dash_tools import DashTools
 from dash_marketplace import DashMarketPlace
 from dash_creators import DashCreators
+from dash_actions import DashActions
 
 def main():
     # Initialize the app
     
-    metr_data = MetricsData.get_metrics()
+    metr_data = MetricsData.read_metrics()
     # breakpoint()
     if metr_data is None:
         metr_data = MetricsData()
 
         FileDumps.init(metr_data)
         APIDumps.init(metr_data)
-        metr_data.save_data()
+        metr_data.save_metrics()
     
     metr_data.max_date()
     app = Dash(__name__)
     # breakpoint()
     reg_graph = DashRegistrations(metr_data.get_data(CNTMGMT_KEY,'user-registrations'), metr_data.get_data(CNTMGMT_KEY, EVENT_FLNM), metr_data.min_ts(), metr_data.now(), app)
     marketplace_graph = DashMarketPlace(metr_data.get_data(MARKETPLACE_KEY), metr_data.min_ts(), metr_data.now(), app)
-    creators_graph = DashCreators(metr_data.get_data(MARKETPLACE_KEY), metr_data.min_ts(), metr_data.now(), app)
     tools_graph = DashTools(metr_data.get_data(TOOLS_KEY), marketplace_graph.get_creators(), metr_data.min_ts(), metr_data.now(), app)
-    
+    creators_graph = DashCreators(metr_data.get_data(MARKETPLACE_KEY), metr_data.min_ts(), metr_data.now(), app)
+    actions_graph = DashActions(metr_data, metr_data.min_ts(), metr_data.now(), app)
+        
     
     # breakpoint()
+    
 
     # App layout
     slider = DashSlider(metr_data.min_ts(), metr_data.now())
@@ -45,6 +48,7 @@ def main():
             tools_graph.as_html(),
             marketplace_graph.as_html(),
             creators_graph.as_html(),
+            actions_graph.as_html(),
         ]
     )
     

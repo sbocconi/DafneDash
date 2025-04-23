@@ -4,9 +4,25 @@ import pickle
 from pathlib import Path
 from datetime import datetime, timedelta
 from globals import CNTMGMT_KEY, MARKETPLACE_KEY
+from datadumps import DataDumps
 
 class MetricsData:
     MTRCS_FILE = 'metrics.pkl'
+    MAPPING = {
+                'cntmgmt - proposals': {'userid' :'proposerName', 'date': ['creationDate']},
+                'cntmgmt - organizations' : {'userid' :'owner', 'date': ['creationDate']},
+                'cntmgmt - teams' : {'userid' :'owner', 'date': ['creationDate']},
+                'cntmgmt - proposals-votes' : {'userid' :'user', 'date': ['date']},
+                'cntmgmt - user-registrations' : {'userid' :'username', 'date': ['registrationTime'], 'format': DataDumps.CNT_DT_FRMT},
+                'cntmgmt - events' : {'userid' : None, 'date': ['start', 'end']},
+                'tools - ObjectReconstuctionTool' : {'userid' :'user', 'date': ['access_date']},
+                'tools - PoseEstimationTool' : {'userid' :'user', 'date': ['access_date']},
+                'tools - VirtualAvatarPersonalizationTool' : {'userid' :'user', 'date': ['access_date']},
+                'tools - style_transfer' : {'userid' :'user', 'date': ['access_date']},
+                'marketplace - nft_items' : {'userid' :'creator_name', 'date': []},
+                'marketplace - marketplace_items' : {'userid' :'creator', 'date': ['created', 'modified']},
+                }
+
 
     def __init__(self, data=None):
         if data is None:
@@ -21,7 +37,26 @@ class MetricsData:
                 'data' : data_to_set if data_to_set is not None else {},
                 'used' : False
             }
+        date_fields, format = MetricsData.get_dates_field(category, key)
+        for date_field in date_fields:
+            if format is not None:
+                self.data_container[category][key]['data'][date_field] = pd.to_datetime(self.data_container[category][key]['data'][date_field], utc=True, format=format)
+            else:
+                self.data_container[category][key]['data'][date_field] = pd.to_datetime(self.data_container[category][key]['data'][date_field], utc=True)
 
+    @classmethod
+    def get_dates_field(cls, key1, key2):
+        dates = cls.MAPPING[f'{key1} - {key2}']['date']
+        if 'format' in cls.MAPPING[f'{key1} - {key2}']:
+            format = cls.MAPPING[f'{key1} - {key2}']['format']
+        else:
+            format = None
+        return dates, format
+
+    @classmethod
+    def get_user_field(cls, key1, key2):
+        userid = cls.MAPPING[f'{key1} - {key2}']['userid']
+        return userid
 
     @staticmethod
     def encode_user(username):
@@ -60,12 +95,12 @@ class MetricsData:
                     are_all_used = False
         return are_all_used
     
-    def save_data(self):
-        with open(self.MTRCS_FILE, 'wb') as f: 
+    def save_metrics(self):
+        with open(MetricsData.MTRCS_FILE, 'wb') as f: 
             pickle.dump(self.data_container, f)
 
     @classmethod
-    def get_metrics(cls):
+    def read_metrics(cls):
         metrics_file = Path(cls.MTRCS_FILE)
         if metrics_file.is_file():
             with open(cls.MTRCS_FILE, 'rb') as f: 

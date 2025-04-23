@@ -3,6 +3,8 @@ SLD_ID = "date-slider"
 TOOLS_GRAPH_ID = "tools-graph"
 MARKETPLACE_GRAPH_ID = "marketplace-graph"
 CREATORS_GRAPH_ID = "creators-graph"
+ACTIONS_GRAPH_ID = "actions-graph"
+
 
 DATAEXP_DIR = "../DataExports"
 EVENT_FLNM = "events"
