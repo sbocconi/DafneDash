@@ -3,6 +3,7 @@ import pandas as pd # type: ignore
 import plotly.express as px # type: ignore
 
 from globals import SLD_ID, CREATORS_GRAPH_ID, thumbs
+from metricsdata import MetricsData
 
 class DashCreators:
     SCALING = 1
@@ -12,10 +13,9 @@ class DashCreators:
 
 
     def __init__(self, marketplace_data, min, max, app):
-        # self.marketplace_data = DashMarketPlace.to_pd(marketplace_data)
         self.marketplace_data = marketplace_data
         # breakpoint()
-        self.all_creators = set(self.marketplace_data['marketplace_items']['data']['creator'])
+        self.all_creators = set(MetricsData.get_subdata(self.marketplace_data,'marketplace_items')['creator'])
         self.daily_creators = self.get_daily_creators(min, max)
         # breakpoint()
         self.min = min
@@ -32,9 +32,10 @@ class DashCreators:
         start_date = pd.to_datetime(start, unit='s', utc=True)
         end_date = pd.to_datetime(end, unit='s', utc=True)
         pivot = start_date
+        slice = MetricsData.get_subdata(self.marketplace_data, 'marketplace_items')
         while pivot < end_date:
-            mask = (pivot <= self.marketplace_data['marketplace_items']['data']['created']) &  (self.marketplace_data['marketplace_items']['data']['created'] < pivot + pd.Timedelta(days=1))
-            unique_creators = set(self.marketplace_data['marketplace_items']['data']['creator'].loc[mask])
+            mask = (pivot <= slice['created']) &  (slice['created'] < pivot + pd.Timedelta(days=1))
+            unique_creators = set(slice['creator'].loc[mask])
             df.loc[len(df)] = [pivot, len(unique_creators)*self.SCALING]
             pivot = pivot + pd.Timedelta(days=1)
 

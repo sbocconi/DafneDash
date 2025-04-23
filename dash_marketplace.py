@@ -3,6 +3,7 @@ import pandas as pd # type: ignore
 import plotly.express as px # type: ignore
 
 from globals import SLD_ID, MARKETPLACE_GRAPH_ID, thumbs
+from metricsdata import MetricsData
 
 class DashMarketPlace:
     SCALING = 10
@@ -14,13 +15,12 @@ class DashMarketPlace:
 
 
     def __init__(self, marketplace_data, min, max, app):
-        # self.marketplace_data = DashMarketPlace.to_pd(marketplace_data)
-        self.marketplace_data = marketplace_data
+        self.mp_items = MetricsData.get_subdata(marketplace_data, 'marketplace_items')
         # breakpoint()
-        self.creators = set(self.marketplace_data['marketplace_items']['data']['creator'])
+        self.creators = set(self.mp_items['creator'])
         self.items_per_creator()
-        self.work_reposiory_items = len(self.marketplace_data['marketplace_items']['data'].loc[self.marketplace_data['marketplace_items']['data']['type']=='work_repository'])
-        self.type_items = set(self.marketplace_data['marketplace_items']['data']['type'])
+        self.work_reposiory_items = len(self.mp_items.loc[self.mp_items['type']=='work_repository'])
+        self.type_items = set(self.mp_items['type'])
         # breakpoint()
         self.min = min
         self.max = max
@@ -35,7 +35,7 @@ class DashMarketPlace:
         df = pd.DataFrame(columns=['id', 'name', 'type', 'owner','creator','created', 'modified', 'nft', 'chainid', 'version', 'version_parent', 'license', 'overall_rating'])
         # breakpoint()
         for key in data.keys():
-            for arr in data[key]['data']:
+            for arr in MetricsData.get_subdata(data, key):
                 # breakpoint()
                 df.loc[len(df)] = arr
         # breakpoint()
@@ -47,8 +47,8 @@ class DashMarketPlace:
         end_date = pd.to_datetime(end, unit='s', utc=True)
         pivot = start_date
         while pivot < end_date:
-            mask = (pivot <= self.marketplace_data['marketplace_items']['data']['created']) &  (self.marketplace_data['marketplace_items']['data']['created'] < pivot + pd.Timedelta(days=1))
-            unique_creators = set(self.marketplace_data['marketplace_items']['data']['creator'].loc[mask])
+            mask = (pivot <= self.mp_items['created']) &  (self.mp_items['created'] < pivot + pd.Timedelta(days=1))
+            unique_creators = set(self.mp_items['creator'].loc[mask])
             df.loc[len(df)] = [pivot, len(unique_creators)*self.SCALING]
             pivot = pivot + pd.Timedelta(days=1)
 
@@ -62,11 +62,11 @@ class DashMarketPlace:
             start = tss[0]
             end = tss[1]
         # breakpoint()
-        dt_idx = pd.DatetimeIndex(self.marketplace_data['marketplace_items']['data'].created).view('int64') // 10**9
+        dt_idx = pd.DatetimeIndex(self.mp_items.created).view('int64') // 10**9
         mask = (dt_idx > start) & (dt_idx <= end)
-        all_data = self.marketplace_data['marketplace_items']['data'].loc[mask]
-        nft_data = self.marketplace_data['marketplace_items']['data'].loc[mask & (~self.marketplace_data['marketplace_items']['data']['nft'].isnull())]
-        free_data = self.marketplace_data['marketplace_items']['data'].loc[mask & (self.marketplace_data['marketplace_items']['data']['nft'].isnull())]
+        all_data = self.mp_items.loc[mask]
+        nft_data = self.mp_items.loc[mask & (~self.mp_items['nft'].isnull())]
+        free_data = self.mp_items.loc[mask & (self.mp_items['nft'].isnull())]
         # daily_token_creators = self.token_generating_creators(start, end)
         
         # breakpoint()
@@ -101,7 +101,7 @@ class DashMarketPlace:
         self.tot_users_one = 0
         self.tot_users_more = 0
         for creator in self.creators:
-            items_per_creator = self.marketplace_data['marketplace_items']['data'].loc[self.marketplace_data['marketplace_items']['data']['creator'] == creator]
+            items_per_creator = self.mp_items.loc[self.mp_items['creator'] == creator]
             if len(items_per_creator) == 0:
                 # breakpoint()
                 self.tot_users_zero = self.tot_users_zero + 1

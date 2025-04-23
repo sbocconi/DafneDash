@@ -8,12 +8,19 @@ from datadumps import DataDumps
 
 class MetricsData:
     MTRCS_FILE = 'metrics.pkl'
+ 
+    SYNTL_DT_FRMT = "%Y-%m-%dT%H:%M:%S.%f"
+    CNT_DT_FRMT = "%Y-%m-%dT%H:%M:%SZ"
+    CERTL_DT_FRMT = "/%m/%d/%Y"
+    MP_DT_FRMT = '%Y-%m-%dT%H:%M:%S.%fZ'
+
+
     MAPPING = {
                 'cntmgmt - proposals': {'userid' :'proposerName', 'date': ['creationDate']},
                 'cntmgmt - organizations' : {'userid' :'owner', 'date': ['creationDate']},
                 'cntmgmt - teams' : {'userid' :'owner', 'date': ['creationDate']},
                 'cntmgmt - proposals-votes' : {'userid' :'user', 'date': ['date']},
-                'cntmgmt - user-registrations' : {'userid' :'username', 'date': ['registrationTime'], 'format': DataDumps.CNT_DT_FRMT},
+                'cntmgmt - user-registrations' : {'userid' :'username', 'date': ['registrationTime'], 'format': CNT_DT_FRMT},
                 'cntmgmt - events' : {'userid' : None, 'date': ['start', 'end']},
                 'tools - ObjectReconstuctionTool' : {'userid' :'user', 'date': ['access_date']},
                 'tools - PoseEstimationTool' : {'userid' :'user', 'date': ['access_date']},
@@ -43,6 +50,8 @@ class MetricsData:
                 self.data_container[category][key]['data'][date_field] = pd.to_datetime(self.data_container[category][key]['data'][date_field], utc=True, format=format)
             else:
                 self.data_container[category][key]['data'][date_field] = pd.to_datetime(self.data_container[category][key]['data'][date_field], utc=True)
+        if len(date_fields) > 0:
+            self.data_container[category][key]['data'] = self.data_container[category][key]['data'].sort_values(by=[date_fields[0]],ascending = True).reset_index(drop=True, inplace=False)
 
     @classmethod
     def get_dates_field(cls, key1, key2):
@@ -63,6 +72,16 @@ class MetricsData:
         hashed_username = hashlib.blake2b(username.encode(), digest_size=12).hexdigest()
         return hashed_username
 
+    @classmethod
+    def get_subdata(cls, data, key):
+        if key is not None:
+            if key in data:
+                data[key]['used'] = True
+                return data[key]['data']
+            else:
+                raise Exception(f'key {key} not in data: {data.keys()}')
+        else:
+            raise Exception(f'Key is None')
 
     def get_data(self, category, key=None):
         
@@ -134,5 +153,17 @@ class MetricsData:
 
     def max_ts(self):
         return int(pd.Timestamp(self.max_date()).timestamp())
+    
+    def get_cumul_scaled(self, key1, key2, scaling):
+        if key1 is None or key2 is None:
+            raise Exception(f'Keys cannot be None, key1: {key1} and key2 {key2}')
+        cnt_data = self.get_data(key1, key2)
+        # breakpoint()
+    
+        cnt_data['cumsum'] = 1
+        cnt_data['cumsum'] = cnt_data['cumsum'].cumsum()*scaling
+        return cnt_data
+
+        
     
     

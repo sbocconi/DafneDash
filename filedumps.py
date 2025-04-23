@@ -39,7 +39,7 @@ class FileDumps(DataDumps):
                     continue
                 username = MetricsData.encode_user(row[1])
                 tool = row[2]
-                use_date = cls.convert_date_frmt(row[3],DataDumps.CERTL_DT_FRMT, DataDumps.CNT_DT_FRMT)
+                use_date = cls.convert_date_frmt(row[3],MetricsData.CERTL_DT_FRMT, MetricsData.CNT_DT_FRMT)
                 if not tool in data:
                     data[f'{tool}'] = []
                 data[f'{tool}'].append([username,use_date])

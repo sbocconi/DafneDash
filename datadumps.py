@@ -12,11 +12,6 @@ def read_yaml():
 
 
 class DataDumps:
-    SYNTL_DT_FRMT = "%Y-%m-%dT%H:%M:%S.%f"
-    CNT_DT_FRMT = "%Y-%m-%dT%H:%M:%SZ"
-    CERTL_DT_FRMT = "/%m/%d/%Y"
-    MP_DT_FRMT = '%Y-%m-%dT%H:%M:%S.%fZ'
-
     metric_data = None
 
     def __init__(self):

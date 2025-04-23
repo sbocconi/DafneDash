@@ -3,6 +3,7 @@ import pandas as pd # type: ignore
 import plotly.express as px # type: ignore
 
 from globals import SLD_ID, TOOLS_GRAPH_ID, thumbs
+from metricsdata import MetricsData
 
 class DashTools:
     TOT_COL = 'black'
@@ -25,11 +26,9 @@ class DashTools:
     def flatten_pd(cls, data):
         df = pd.DataFrame(columns=["tool","user", "access_date"])
         for key in data.keys():
-            for row in data[key]['data'].itertuples():
+            for row in MetricsData.get_subdata(data, key).itertuples():
                 # breakpoint()
                 df.loc[len(df)] = [key,row.user,row.access_date]
-            # df = pd.concat([df,data[key]['data']])
-            # df.loc[len(df)] = [key, arr[0], arr[1]]
         # breakpoint()
         return df
     
