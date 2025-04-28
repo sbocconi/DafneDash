@@ -3,8 +3,9 @@ import hashlib
 import pickle
 from pathlib import Path
 from datetime import datetime, timedelta
+import copy
+
 from globals import CNTMGMT_KEY, MARKETPLACE_KEY
-from datadumps import DataDumps
 
 class MetricsData:
     MTRCS_FILE = 'metrics.pkl'
@@ -157,7 +158,7 @@ class MetricsData:
     def get_reg_cumul_scaled(self, scaling):
         key1 = CNTMGMT_KEY
         key2 = 'user-registrations'
-        cnt_data = self.get_data(key1, key2)
+        cnt_data = copy.deepcopy(self.get_data(key1, key2))
         # breakpoint()
     
         cnt_data['cumsum'] = 1

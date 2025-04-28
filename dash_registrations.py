@@ -14,9 +14,9 @@ class DashRegistrations:
         self.reg_data = reg_data
         self.evt_data = evt_data
         self.total_reg_nr = len(self.reg_data)
-        self.uc1_reg_nr = len(self.reg_data.loc[self.reg_data['UC'] == 1])
-        self.uc2_reg_nr = len(self.reg_data.loc[self.reg_data['UC'] == 2])
-        self.uc3_reg_nr = len(self.reg_data.loc[self.reg_data['UC'] == 3])
+        self.uc1_reg_nr = len(self.reg_data.loc[self.reg_data['UC'] == 1]) + len(self.reg_data.loc[self.reg_data['UC'] == -1])/3
+        self.uc2_reg_nr = len(self.reg_data.loc[self.reg_data['UC'] == 2]) + len(self.reg_data.loc[self.reg_data['UC'] == -1])/3
+        self.uc3_reg_nr = len(self.reg_data.loc[self.reg_data['UC'] == 3]) + len(self.reg_data.loc[self.reg_data['UC'] == -1])/3
         self.min = min
         self.max = max
         self.app = app
@@ -34,16 +34,16 @@ class DashRegistrations:
             end = tss[1]
         dt_idx = pd.DatetimeIndex(self.reg_data.registrationTime).view('int64') // 10**9
         mask = (dt_idx > start) & (dt_idx <= end)
-        mask_uc1 = self.reg_data.loc[mask & (self.reg_data['UC'] == 1)]
-        mask_uc2 = self.reg_data.loc[mask & (self.reg_data['UC'] == 2)]
-        mask_uc3 = self.reg_data.loc[mask & (self.reg_data['UC'] == 3)]
-        # breakpoint()
+        mask_uc1 = self.reg_data.loc[mask & ((self.reg_data['UC'] == 1) | (self.reg_data['UC'] == -1))]
+        mask_uc2 = self.reg_data.loc[mask & ((self.reg_data['UC'] == 2) | (self.reg_data['UC'] == -1))]
+        mask_uc3 = self.reg_data.loc[mask & ((self.reg_data['UC'] == 3) | (self.reg_data['UC'] == -1))]
+        breakpoint()
         # https://plotly.com/python/ecdf-plots/
         fig = px.ecdf(self.reg_data.loc[mask], x='registrationTime', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.TOT_COL])
         # breakpoint()
-        uc1 = px.ecdf(mask_uc1, x='registrationTime', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.UC1_COL])
-        uc2 = px.ecdf(mask_uc2, x='registrationTime', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.UC2_COL])
-        uc3 = px.ecdf(mask_uc3, x='registrationTime', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.UC3_COL])
+        uc1 = px.ecdf(mask_uc1, x='registrationTime', y='counts', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.UC1_COL])
+        uc2 = px.ecdf(mask_uc2, x='registrationTime', y='counts', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.UC2_COL])
+        uc3 = px.ecdf(mask_uc3, x='registrationTime', y='counts', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.UC3_COL])
         
         for trace in uc1.data:
             fig.add_trace(trace)
@@ -90,10 +90,10 @@ class DashRegistrations:
         return html.Div(
                 [
                     html.H2("User Registrations"),
-                    html.H3(f"KPI_12 At least 200 participants in the pilots {thumbs(self.total_reg_nr>200)}"),
-                    html.H3(f"KPI_15 Use Case 1: At least 100 registered users {thumbs(self.uc1_reg_nr>100)}"),
-                    html.H3(f"KPI_16 Use Case 2: At least 50 registered users {thumbs(self.uc2_reg_nr>50)}"),
-                    html.H3(f"KPI_17 Use Case 3: At least 50 registered users {thumbs(self.uc3_reg_nr>50)}"),
+                    html.H3(f"KPI_12 At least 200 participants in the pilots {thumbs(self.total_reg_nr>=200)}"),
+                    html.H3(f"KPI_15 Use Case 1: At least 100 registered users {thumbs(self.uc1_reg_nr>=100)}"),
+                    html.H3(f"KPI_16 Use Case 2: At least 50 registered users {thumbs(self.uc2_reg_nr>=50)}"),
+                    html.H3(f"KPI_17 Use Case 3: At least 50 registered users {thumbs(self.uc3_reg_nr>=50)}"),
                     dcc.Graph(id=REG_TL_ID)
                 ],
             )
