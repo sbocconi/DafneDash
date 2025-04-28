@@ -154,9 +154,9 @@ class MetricsData:
     def max_ts(self):
         return int(pd.Timestamp(self.max_date()).timestamp())
     
-    def get_cumul_scaled(self, key1, key2, scaling):
-        if key1 is None or key2 is None:
-            raise Exception(f'Keys cannot be None, key1: {key1} and key2 {key2}')
+    def get_reg_cumul_scaled(self, scaling):
+        key1 = CNTMGMT_KEY
+        key2 = 'user-registrations'
         cnt_data = self.get_data(key1, key2)
         # breakpoint()
     

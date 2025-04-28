@@ -3,15 +3,19 @@ import pandas as pd # type: ignore
 import plotly.express as px # type: ignore
 import plotly.graph_objects as go
 
-from globals import SLD_ID, ACTIONS_GRAPH_ID, CNTMGMT_KEY, thumbs
+from globals import SLD_ID, WEEK_ACTIONS_GRAPH_ID, MONTH_ACTIONS_GRAPH_ID, CNTMGMT_KEY, thumbs
 from metricsdata import MetricsData
 
 
 class DashActions:
     SCALING = 1
+    WEEKLY_PERC_THR = 15
+    MONTHLY_PERC_THR = 25
 
     TOT_COL = 'black'
-    USR_COL = 'blue'
+    WEEK_COL = 'red'
+    MONTH_COL = 'blue'
+
     
 
     def __init__(self, metr_data, min, max, app):
@@ -24,9 +28,13 @@ class DashActions:
         self.max = max
         self.app = app
         self.app.callback(
-            dependencies.Output(ACTIONS_GRAPH_ID, "figure"),
+            dependencies.Output(WEEK_ACTIONS_GRAPH_ID, "figure"),
             dependencies.Input(SLD_ID, "value")
-            )(self.actions_tl_updt)
+            )(self.week_actions_tl_updt)
+        self.app.callback(
+            dependencies.Output(MONTH_ACTIONS_GRAPH_ID, "figure"),
+            dependencies.Input(SLD_ID, "value")
+            )(self.month_actions_tl_updt)
     
    
     def period_active_users(self, start, end, period):
@@ -82,7 +90,7 @@ class DashActions:
 
 
 
-    def actions_tl_updt(self,tss):
+    def week_actions_tl_updt(self,tss):
         if tss == None:
             start = self.min
             end = self.max
@@ -92,32 +100,95 @@ class DashActions:
         # breakpoint()
         dt_idx = pd.DatetimeIndex(self.weekly_active_users['date']).view('int64') // 10**9
         mask_week = (dt_idx > start) & (dt_idx <= end)
-        dt_idx = pd.DatetimeIndex(self.monthly_active_users['date']).view('int64') // 10**9
-        mask_month = (dt_idx > start) & (dt_idx <= end)
         dt_idx = pd.DatetimeIndex(self.metr_data.get_data(CNTMGMT_KEY,'user-registrations')['registrationTime']).view('int64') // 10**9
         mask_reg = (dt_idx > start) & (dt_idx <= end)
-        users_scaled = self.metr_data.get_cumul_scaled(CNTMGMT_KEY, 'user-registrations', .15)
+        users_scaled = self.metr_data.get_reg_cumul_scaled(DashActions.WEEKLY_PERC_THR/100)
         # breakpoint()
         
         aligned_weekly = self.weekly_active_users.loc[mask_week]
-        week_bar = go.Bar(x=aligned_weekly['date'], y=aligned_weekly['nr_active_users'], name='Weekly', width=7*24*3600*1000)
+        bar = go.Bar(x=aligned_weekly['date'], y=aligned_weekly['nr_active_users'], marker_color=DashActions.WEEK_COL, width=7*24*3600*1000)
         
-        aligned_monthly = self.monthly_active_users.loc[mask_month]
-        month_bar = go.Bar(x=aligned_monthly['date'], y=aligned_monthly['nr_active_users'], name='Monthly', width=28*24*3600*1000)
-        fig = go.Figure(data=[month_bar,week_bar])
         
         # fig.update_traces(line_color=DashActions.USR_COL, line_width=2)
-        reg_graph = px.line(users_scaled.loc[mask_reg], x='registrationTime', y='cumsum')
-        reg_graph.update_traces(line_color=DashActions.TOT_COL, line_width=2)
+        # breakpoint()
+        fig = px.line(users_scaled.loc[mask_reg], x='registrationTime', y='cumsum')
+        mid_point = int(len(users_scaled.loc[mask_reg])/2)
+
+        fig.add_annotation(
+                x=users_scaled.loc[mask_reg]['registrationTime'].iloc[mid_point],
+                y=users_scaled.loc[mask_reg]['cumsum'].iloc[mid_point],
+                text=f"{DashActions.WEEKLY_PERC_THR}% of users",
+                showarrow=False,
+                font_size=15,
+                xanchor="left",
+                yanchor="top"
+            )
+        fig.update_traces(line_color=DashActions.TOT_COL, line_width=2)
         
-        for trace in reg_graph.data:
-            fig.add_trace(trace)
+        fig.add_trace(bar)
 
         fig.update_layout(
             # title='Combined Bar Charts',
             xaxis_title='Time',
-            yaxis_title='Active Users',
-            barmode='overlay'
+            yaxis_title='Weekly Active Users',
+            showlegend=False,
+        )
+
+        # breakpoint()
+
+        
+        # if start == self.min and end == self.max:
+        #     fig.add_hline(y=len(self.creators)/50*self.SCALING, line_dash="dashdot", line_width=0.5, line_color=self.TOT_COL,
+        #         annotation_text="KPI_9 Creators generating tokens daily >2%", 
+        #         annotation_position="top left",
+        #         annotation_font_size=15,
+        #         annotation_font_color=self.TOT_COL
+        #         )
+            
+        return fig
+
+    def month_actions_tl_updt(self,tss):
+        if tss == None:
+            start = self.min
+            end = self.max
+        else:
+            start = tss[0]
+            end = tss[1]
+        # breakpoint()
+        dt_idx = pd.DatetimeIndex(self.monthly_active_users['date']).view('int64') // 10**9
+        mask_month = (dt_idx > start) & (dt_idx <= end)
+        dt_idx = pd.DatetimeIndex(self.metr_data.get_data(CNTMGMT_KEY,'user-registrations')['registrationTime']).view('int64') // 10**9
+        mask_reg = (dt_idx > start) & (dt_idx <= end)
+        users_scaled = self.metr_data.get_reg_cumul_scaled(DashActions.MONTHLY_PERC_THR/100)
+        # breakpoint()
+                
+        aligned_monthly = self.monthly_active_users.loc[mask_month]
+        bar = go.Bar(x=aligned_monthly['date'], y=aligned_monthly['nr_active_users'],  marker_color=DashActions.MONTH_COL)
+        
+        # fig.update_traces(line_color=DashActions.USR_COL, line_width=2)
+        fig = px.line(users_scaled.loc[mask_reg], x='registrationTime', y='cumsum')
+        mid_point = int(len(users_scaled.loc[mask_reg])/2)
+        # breakpoint()
+        fig.add_annotation(
+            x=users_scaled.loc[mask_reg]['registrationTime'].iloc[mid_point],
+            y=users_scaled.loc[mask_reg]['cumsum'].iloc[mid_point],
+            text=f"{DashActions.MONTHLY_PERC_THR}% of users",
+            showarrow=False,
+            font_size=15,
+            xanchor="left",
+            yanchor="top"
+        )
+
+        
+        fig.update_traces(line_color=DashActions.TOT_COL, line_width=2)
+        
+        fig.add_trace(bar)
+
+        fig.update_layout(
+            # title='Combined Bar Charts',
+            xaxis_title='Time',
+            yaxis_title='Monthly Active Users',
+            showlegend=False,
         )
 
         # breakpoint()
@@ -137,9 +208,12 @@ class DashActions:
         
         return html.Div(
                 [
-                    html.H2("Active Users"),
-                    html.H3(f"Some days {thumbs(True)}, most days {thumbs(False)} KPI_9 Creators generating tokens daily >2%"),
-                    dcc.Graph(id=ACTIONS_GRAPH_ID)
+                    html.H2("Weekly Active Users"),
+                    html.H3(f"KPI_10 Users that perform any action on the platform weekly > {DashActions.WEEKLY_PERC_THR}% - Some weeks {thumbs(True)}, most weeks {thumbs(False)}"),
+                    dcc.Graph(id=WEEK_ACTIONS_GRAPH_ID),
+                    html.H2("Monthly Active Users"),
+                    html.H3(f"KPI_11 Users that perform any action on the platform monthly > {DashActions.MONTHLY_PERC_THR}% - Some months {thumbs(True)}, most months {thumbs(False)}"),
+                    dcc.Graph(id=MONTH_ACTIONS_GRAPH_ID)
                 ],
             )
 

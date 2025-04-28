@@ -82,8 +82,8 @@ class DashTools:
         return html.Div(
                 [
                     html.H2("Tools Usage"),
-                    html.H3(f"{thumbs(self.tot_users_zero==0 and self.tot_users_one==0)} KPI_6 Usage of provided production components/ workflows > 1 per creator"),
-                    html.P(f"Total creators: {len(self.creators)}, average tool usage per creator: {self.avg_usage_per_creator}"),
+                    html.H3(f"KPI_6 Usage of provided production components/ workflows > 1 per creator {thumbs(self.tot_users_zero==0 and self.tot_users_one==0)}"),
+                    html.P(f"More info: Total creators: {len(self.creators)}, average tool usage per creator: {self.avg_usage_per_creator}"),
                     html.P(f"Users with no tool usage: {self.tot_users_zero}, one usage: {self.tot_users_one}, more usages: {self.tot_users_more}"),
                     dcc.Graph(id=TOOLS_GRAPH_ID)
                 ],

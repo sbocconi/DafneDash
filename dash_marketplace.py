@@ -124,9 +124,9 @@ class DashMarketPlace:
         return html.Div(
                 [
                     html.H2("Marketplace Items"),
-                    html.H3(f"{thumbs(self.tot_users_zero==0 and self.tot_users_one==0)} KPI_7 Number of items shared by creators > 1 per creator"),
-                    html.H3(f"{thumbs(self.work_reposiory_items>5)} KPI_32 Short term: Number of artwork production setups (work repositories) published > 5"),
-                    html.P(f"Total creators: {len(self.creators)}, average items per creator: {self.avg_item_per_creator}"),
+                    html.H3(f"KPI_7 Number of items shared by creators > 1 per creator {thumbs(self.tot_users_zero==0 and self.tot_users_one==0)}"),
+                    html.H3(f"KPI_32 Short term: Number of artwork production setups (work repositories) published > 5 {thumbs(self.work_reposiory_items>5)}"),
+                    html.P(f"More info: Total creators: {len(self.creators)}, average items per creator: {self.avg_item_per_creator}"),
                     html.P(f"Users with no items: {self.tot_users_zero}, one item: {self.tot_users_one}, more items: {self.tot_users_more}"),
                     html.P(f"Type of items published: {self.type_items}"),
                     dcc.Graph(id=MARKETPLACE_GRAPH_ID)

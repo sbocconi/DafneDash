@@ -90,10 +90,10 @@ class DashRegistrations:
         return html.Div(
                 [
                     html.H2("User Registrations"),
-                    html.H3(f"{thumbs(self.total_reg_nr>200)} KPI_12 At least 200 participants in the pilots"),
-                    html.H3(f"{thumbs(self.uc1_reg_nr>100)} KPI_15 Use Case 1: At least 100 registered users"),
-                    html.H3(f"{thumbs(self.uc2_reg_nr>50)} KPI_16 Use Case 2: At least 50 registered users"),
-                    html.H3(f"{thumbs(self.uc3_reg_nr>50)} KPI_17 Use Case 3: At least 50 registered users"),
+                    html.H3(f"KPI_12 At least 200 participants in the pilots {thumbs(self.total_reg_nr>200)}"),
+                    html.H3(f"KPI_15 Use Case 1: At least 100 registered users {thumbs(self.uc1_reg_nr>100)}"),
+                    html.H3(f"KPI_16 Use Case 2: At least 50 registered users {thumbs(self.uc2_reg_nr>50)}"),
+                    html.H3(f"KPI_17 Use Case 3: At least 50 registered users {thumbs(self.uc3_reg_nr>50)}"),
                     dcc.Graph(id=REG_TL_ID)
                 ],
             )
