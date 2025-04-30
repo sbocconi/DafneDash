@@ -10,6 +10,7 @@ from dash_tools import DashTools
 from dash_marketplace import DashMarketPlace
 from dash_creators import DashCreators
 from dash_actions import DashActions
+from dash_collaborations import DashCollaborations
 
 def main():
     # Initialize the app
@@ -27,10 +28,11 @@ def main():
     app = Dash(__name__)
     # breakpoint()
     reg_graph = DashRegistrations(metr_data.get_data(CNTMGMT_KEY,'user-registrations'), metr_data.get_data(CNTMGMT_KEY, EVENT_FLNM), metr_data.min_ts(), metr_data.now(), app)
-    marketplace_graph = DashMarketPlace(metr_data.get_data(MARKETPLACE_KEY), metr_data.min_ts(), metr_data.now(), app)
-    tools_graph = DashTools(metr_data.get_data(TOOLS_KEY), marketplace_graph.get_creators(), metr_data.min_ts(), metr_data.now(), app)
+    marketplace_graph = DashMarketPlace(metr_data, metr_data.min_ts(), metr_data.now(), app)
+    tools_graph = DashTools(metr_data.get_data(TOOLS_KEY), metr_data.get_creators(), metr_data.min_ts(), metr_data.now(), app)
     creators_graph = DashCreators(metr_data.get_data(MARKETPLACE_KEY), metr_data.min_ts(), metr_data.now(), app)
     actions_graph = DashActions(metr_data, metr_data.min_ts(), metr_data.now(), app)
+    sharing_graph = DashCollaborations(metr_data, metr_data.min_ts(), metr_data.now(), app)
         
     
     # breakpoint()
@@ -49,6 +51,7 @@ def main():
             marketplace_graph.as_html(),
             creators_graph.as_html(),
             actions_graph.as_html(),
+            sharing_graph.as_html(),
         ]
     )
     

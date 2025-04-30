@@ -2,7 +2,7 @@ from dash import Dash, html, dash_table, dependencies, dcc, callback, Output, In
 import pandas as pd # type: ignore
 import plotly.express as px # type: ignore
 
-from globals import SLD_ID, MARKETPLACE_GRAPH_ID, thumbs
+from globals import SLD_ID, MARKETPLACE_KEY, MARKETPLACE_GRAPH_ID, thumbs
 from metricsdata import MetricsData
 
 class DashMarketPlace:
@@ -14,10 +14,10 @@ class DashMarketPlace:
     CRT_COL = 'blue'
 
 
-    def __init__(self, marketplace_data, min, max, app):
-        self.mp_items = MetricsData.get_subdata(marketplace_data, 'marketplace_items')
+    def __init__(self, metrics_data, min, max, app):
+        self.mp_items = metrics_data.get_data(MARKETPLACE_KEY, 'marketplace_items')
         # breakpoint()
-        self.creators = set(self.mp_items['creator'])
+        self.creators = metrics_data.get_creators()
         self.items_per_creator()
         self.work_reposiory_items = len(self.mp_items.loc[self.mp_items['type']=='work_repository'])
         self.type_items = set(self.mp_items['type'])
@@ -30,16 +30,16 @@ class DashMarketPlace:
             dependencies.Input(SLD_ID, "value")
             )(self.marketplace_tl_updt)
     
-    @classmethod
-    def to_pd(cls, data):
-        df = pd.DataFrame(columns=['id', 'name', 'type', 'owner','creator','created', 'modified', 'nft', 'chainid', 'version', 'version_parent', 'license', 'overall_rating'])
-        # breakpoint()
-        for key in data.keys():
-            for arr in MetricsData.get_subdata(data, key):
-                # breakpoint()
-                df.loc[len(df)] = arr
-        # breakpoint()
-        return df
+    # @classmethod
+    # def to_pd(cls, data):
+    #     df = pd.DataFrame(columns=['id', 'name', 'type', 'owner','creator','created', 'modified', 'nft', 'chainid', 'version', 'version_parent', 'license', 'overall_rating'])
+    #     # breakpoint()
+    #     for key in data.keys():
+    #         for arr in MetricsData.get_subdata(data, key):
+    #             # breakpoint()
+    #             df.loc[len(df)] = arr
+    #     # breakpoint()
+    #     return df
     
     def token_generating_creators(self, start, end):
         df = pd.DataFrame(columns=['date','nr_creators'])
@@ -114,11 +114,6 @@ class DashMarketPlace:
         self.avg_item_per_creator = tot / len(self.creators)
         # breakpoint()
     
-        
-    
-    def get_creators(self):
-        return self.creators
-
     def as_html(self):
         
         return html.Div(

@@ -5,6 +5,7 @@ MARKETPLACE_GRAPH_ID = "marketplace-graph"
 CREATORS_GRAPH_ID = "creators-graph"
 WEEK_ACTIONS_GRAPH_ID = "week-actions-graph"
 MONTH_ACTIONS_GRAPH_ID = "month-actions-graph"
+COLLABORATIONS_GRAPH_ID = "collaboration-graph"
 
 DATAEXP_DIR = "../DataExports"
 EVENT_FLNM = "events"

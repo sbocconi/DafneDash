@@ -17,12 +17,14 @@ class MetricsData:
 
 
     MAPPING = {
-                'cntmgmt - proposals': {'userid' :'proposerName', 'date': ['creationDate']},
-                'cntmgmt - organizations' : {'userid' :'owner', 'date': ['creationDate']},
-                'cntmgmt - teams' : {'userid' :'owner', 'date': ['creationDate']},
-                'cntmgmt - proposals-votes' : {'userid' :'user', 'date': ['date']},
-                'cntmgmt - user-registrations' : {'userid' :'username', 'date': ['registrationTime'], 'format': CNT_DT_FRMT},
                 'cntmgmt - events' : {'userid' : None, 'date': ['start', 'end']},
+                'cntmgmt - contents' : {'userid' :'creator', 'date': ['creationDate']},
+                'cntmgmt - contributors' : {'userid' :'userAdding', 'date': ['dateTime']},
+                'cntmgmt - organizations' : {'userid' :'owner', 'date': ['creationDate']},
+                'cntmgmt - proposals': {'userid' :'proposerName', 'date': ['creationDate']},
+                'cntmgmt - proposals-votes' : {'userid' :'user', 'date': ['date']},
+                'cntmgmt - teams' : {'userid' :'owner', 'date': ['creationDate']},
+                'cntmgmt - user-registrations' : {'userid' :'username', 'date': ['registrationTime'], 'format': CNT_DT_FRMT},
                 'tools - ObjectReconstuctionTool' : {'userid' :'user', 'date': ['access_date']},
                 'tools - PoseEstimationTool' : {'userid' :'user', 'date': ['access_date']},
                 'tools - VirtualAvatarPersonalizationTool' : {'userid' :'user', 'date': ['access_date']},
@@ -165,6 +167,12 @@ class MetricsData:
         cnt_data['cumsum'] = cnt_data['cumsum'].cumsum()*scaling
         return cnt_data
 
+    def get_creators(self):
+        data = self.get_data(MARKETPLACE_KEY, 'marketplace_items')
+        # breakpoint()
+        creators = set(data['creator'])
+        return creators
+        
         
     
     

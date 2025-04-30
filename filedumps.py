@@ -60,7 +60,8 @@ class FileDumps(DataDumps):
             for idx2 in range(idx1+1, len_df):
                 # breakpoint()
                 row2 = data.iloc[idx2]
-                if (row1.start <= row2.start <=row1.end) or \
+                if (row1.start >= row1.end) or \
+                    (row1.start <= row2.start <=row1.end) or \
                     (row1.start <= row2.end <=row1.end) or \
                     (row2.start <= row1.start <=row2.end) or \
                     (row2.start <= row1.start <=row2.end):

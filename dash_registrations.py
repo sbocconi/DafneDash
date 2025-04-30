@@ -37,7 +37,7 @@ class DashRegistrations:
         mask_uc1 = self.reg_data.loc[mask & ((self.reg_data['UC'] == 1) | (self.reg_data['UC'] == -1))]
         mask_uc2 = self.reg_data.loc[mask & ((self.reg_data['UC'] == 2) | (self.reg_data['UC'] == -1))]
         mask_uc3 = self.reg_data.loc[mask & ((self.reg_data['UC'] == 3) | (self.reg_data['UC'] == -1))]
-        breakpoint()
+        # breakpoint()
         # https://plotly.com/python/ecdf-plots/
         fig = px.ecdf(self.reg_data.loc[mask], x='registrationTime', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.TOT_COL])
         # breakpoint()
@@ -52,10 +52,20 @@ class DashRegistrations:
         for trace in uc3.data:
             fig.add_trace(trace)
         
+        # positions = ["bottom left","top left"]
+        positions = range(20,220,20)
+        cnt = 0
         for event in self.evt_data.itertuples():
             fig.add_vrect(x0=event.start, x1=event.end, 
-              annotation_text=event.name, annotation_position="top left",
+            #   annotation_text=event.name, annotation_position=positions[cnt],
               fillcolor=self.UC1_COL if event.UC == 1 else self.UC2_COL if event.UC == 2 else self.UC3_COL, opacity=0.20, line_width=0)
+            fig.add_annotation(
+                x=event.start,
+                y=positions[cnt],
+                text=event.name,
+                showarrow=True
+            )
+            cnt = (cnt+1)%len(positions)
         
         # if start == self.min and end == self.max:
         #     fig.add_hline(y=200, line_dash="dashdot", line_width=0.5, line_color=self.TOT_COL,
