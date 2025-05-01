@@ -81,7 +81,6 @@ class DashActions:
 
                         pivot = pivot + offset
 
-        
         df['nr_active_users'] = [len(item) for item in df['active_users']]
         # breakpoint()
         return df.sort_values(by=["date",],ascending = True).reset_index(drop=True, inplace=False)

@@ -32,6 +32,9 @@ class MetricsData:
                 'tools - style_transfer' : {'userid' :'user', 'date': ['access_date']},
                 'marketplace - nft_items' : {'userid' :'creator_name', 'date': []},
                 'marketplace - marketplace_items' : {'userid' :'creator', 'date': ['created', 'modified']},
+                'marketplace - ratings' : {'userid' :'user', 'date': ['rated_at']},
+                'marketplace - reports' : {'userid' :'reporter', 'date': ['report_received', 'warning_sent']},
+                
                 }
 
 

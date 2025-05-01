@@ -69,3 +69,26 @@ class DataDumps:
             # breakpoint()
         return df
     
+    @classmethod
+    def get_mp_ratings_df(cls, data):
+        df = pd.DataFrame(columns=['id', 'item_id', 'user', 'rating', 'rated_at'])
+        # df = df.astype({"rated_at": "datetime64[ns]"})
+        # breakpoint()
+        for tuple in data:
+            df.loc[len(df)] = tuple
+            # breakpoint()
+        # df["rated_at"] = pd.to_datetime(df["created"])
+        return df
+    
+    @classmethod
+    def get_mp_reports_df(cls, data):
+        df = pd.DataFrame(columns=['id', 'item_id', 'item_name', 'reason', 'reporter', 'action', 'report_received', 'warning_sent'])
+        # df = df.astype({"report_received": "datetime64[ns]", "warning_sent": "datetime64[ns]"})
+        # breakpoint()
+        for tuple in data:
+            df.loc[len(df)] = tuple
+            # breakpoint()
+        # df["report_received"] = pd.to_datetime(df["report_received"])
+        # df["warning_sent"] = pd.to_datetime(df["warning_sent"])
+        return df
+    

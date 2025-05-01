@@ -11,6 +11,8 @@ from dafnekeycloak import DafneKeycloak
 
 class APIDumps(DataDumps):
 
+    user_map = {}
+
     def __init__(self):
         pass
         
@@ -22,6 +24,8 @@ class APIDumps(DataDumps):
         cls.token = DafneKeycloak().get_access_token()
         cls.read_nft_items()
         cls.read_marketplace_items()
+        cls.read_ratings()
+        cls.read_reports()
 
     @classmethod
     def do_request(cls, url, headers={}, data={}):
@@ -134,6 +138,9 @@ class APIDumps(DataDumps):
                 item_name = item['name']
                 type = item['type']
                 owner = item['owner_name'] if mp_api['encoded_users'] else MetricsData.encode_user(item['owner_name'])
+                if not f"{item['owner']}" in cls.user_map:
+                    cls.user_map[f"{item['owner']}"] = owner
+
                 created_date = cls.convert_date_frmt(item['created'],MetricsData.MP_DT_FRMT, MetricsData.CNT_DT_FRMT)
                 modified_date = cls.convert_date_frmt(item['modified'],MetricsData.MP_DT_FRMT, MetricsData.CNT_DT_FRMT)
                 nft = item['nft']
@@ -153,6 +160,80 @@ class APIDumps(DataDumps):
 
                 data.append([id, item_name, type, owner, creator, created_date, modified_date, nft, version, version_parent, license, overall_rating])
             cls.set_keyed_data(MARKETPLACE_KEY, mp_api_name, cls.get_mp_items_df(data))
+            # breakpoint()
+            
+        except Exception as e:
+            print(e)
+            raise Exception(e)
+    
+    @classmethod
+    def read_ratings(cls):
+        settings = read_yaml()['marketplace']
+        
+        mp_api_url = settings['url']
+        
+        mp_api_name = 'ratings'
+        mp_api = settings[f"{mp_api_name}"]
+        mp_api_endpoint = mp_api['endpoint']
+
+        headers = cls.get_header(mp_api['auth'])
+
+        # breakpoint()
+
+        try:
+            response = cls.do_request(f"{mp_api_url}/{mp_api_endpoint}", headers=headers)
+            data = []
+            for item in response:
+                # breakpoint()
+                id = item['id']
+                item_id = item['item']
+                # user = item['user'] if mp_api['encoded_users'] else MetricsData.encode_user(item['user'])
+                user = cls.user_map[f"{item['user']}"]
+                rating = item['rating']
+                rated_at = cls.convert_date_frmt(item['rated_at'],MetricsData.MP_DT_FRMT, MetricsData.CNT_DT_FRMT)
+
+                data.append([id, item_id, user, rating, rated_at])
+            cls.set_keyed_data(MARKETPLACE_KEY, mp_api_name, cls.get_mp_ratings_df(data))
+            # breakpoint()
+            
+        except Exception as e:
+            print(e)
+            raise Exception(e)
+
+    @classmethod
+    def read_reports(cls):
+        settings = read_yaml()['marketplace']
+        
+        mp_api_url = settings['url']
+        
+        mp_api_name = 'reports'
+        mp_api = settings[f"{mp_api_name}"]
+        mp_api_endpoint = mp_api['endpoint']
+
+        headers = cls.get_header(mp_api['auth'])
+
+        # breakpoint()
+
+        try:
+            response = cls.do_request(f"{mp_api_url}/{mp_api_endpoint}", headers=headers)
+            data = []
+            for item in response:
+                # breakpoint()
+                id = item['id']
+                item_id = item['item']
+                item_name = item['item_name']
+                reason = item['reason']
+                reporter = cls.user_map[f"{item['reporter']}"]
+                action = item['action']
+                report_received = cls.convert_date_frmt(item['report_received'],MetricsData.MP_DT_FRMT, MetricsData.CNT_DT_FRMT)
+                # breakpoint()
+                if item['warning_sent'] is not None:
+                    warning_sent = cls.convert_date_frmt(item['warning_sent'],MetricsData.MP_DT_FRMT, MetricsData.CNT_DT_FRMT)
+                else:
+                    warning_sent = None
+
+                data.append([id, item_id, item_name, reason, reporter, action, report_received, warning_sent])
+            cls.set_keyed_data(MARKETPLACE_KEY, mp_api_name, cls.get_mp_reports_df(data))
             # breakpoint()
             
         except Exception as e:
