@@ -2,7 +2,7 @@ from dash import Dash, html, dash_table, dependencies, dcc, callback, Output, In
 import pandas as pd # type: ignore
 import plotly.express as px # type: ignore
 
-from globals import SLD_ID, TOOLS_GRAPH_ID, thumbs
+from globals import SLD_ID, TOOLS_GRAPH_ID, thumbs, get_mask
 from metricsdata import MetricsData
 
 class DashTools:
@@ -41,8 +41,7 @@ class DashTools:
             start = tss[0]
             end = tss[1]
         # breakpoint()
-        dt_idx = pd.DatetimeIndex(self.tools_data.access_date).view('int64') // 10**9
-        mask = (dt_idx > start) & (dt_idx <= end)
+        mask = get_mask(self.tools_data.access_date, start, end)
         
         tools = set(self.tools_data['tool'].loc[mask])
         self.tools_df = pd.DataFrame(columns=["tool","total_usage", "unique_users"])
@@ -54,7 +53,13 @@ class DashTools:
         # fig = px.histogram(self.tools_data[mask], x="tool")
         fig = px.bar(self.tools_df, x="tool", y=["total_usage","unique_users"], barmode="group")
         # breakpoint()
-                    
+
+        fig.update_layout(
+            xaxis_title='Tool Name',
+            yaxis_title='Usage / Users',
+            legend_title_text=None
+        )
+
         return fig
 
     def usage_tools_per_creator(self):

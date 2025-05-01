@@ -1,8 +1,10 @@
 from dash import Dash, html, dash_table, dependencies, dcc, callback, Output, Input # type: ignore
 import pandas as pd # type: ignore
 import plotly.express as px # type: ignore
+import plotly.graph_objects as go
 
-from globals import REG_TL_ID, SLD_ID, thumbs
+from globals import REG_TL_ID, SLD_ID, thumbs, get_mask
+from metricsdata import MetricsData
 
 class DashRegistrations:
     TOT_COL = 'black'
@@ -32,30 +34,95 @@ class DashRegistrations:
         else:
             start = tss[0]
             end = tss[1]
-        dt_idx = pd.DatetimeIndex(self.reg_data.registrationTime).view('int64') // 10**9
-        mask = (dt_idx > start) & (dt_idx <= end)
-        mask_uc1 = self.reg_data.loc[mask & ((self.reg_data['UC'] == 1) | (self.reg_data['UC'] == -1))]
-        mask_uc2 = self.reg_data.loc[mask & ((self.reg_data['UC'] == 2) | (self.reg_data['UC'] == -1))]
-        mask_uc3 = self.reg_data.loc[mask & ((self.reg_data['UC'] == 3) | (self.reg_data['UC'] == -1))]
-        # breakpoint()
-        # https://plotly.com/python/ecdf-plots/
-        fig = px.ecdf(self.reg_data.loc[mask], x='registrationTime', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.TOT_COL])
-        # breakpoint()
-        uc1 = px.ecdf(mask_uc1, x='registrationTime', y='counts', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.UC1_COL])
-        uc2 = px.ecdf(mask_uc2, x='registrationTime', y='counts', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.UC2_COL])
-        uc3 = px.ecdf(mask_uc3, x='registrationTime', y='counts', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.UC3_COL])
         
-        for trace in uc1.data:
-            fig.add_trace(trace)
-        for trace in uc2.data:
-            fig.add_trace(trace)
-        for trace in uc3.data:
-            fig.add_trace(trace)
+        mask = get_mask(self.reg_data.registrationTime, start, end)
+        
+        comm_wght_mask = {
+                'mask' : (self.reg_data['UC'] == -1),
+                'weight': 1/3
+        }
+        uc1_wght_mask = {
+                'mask' : (self.reg_data['UC'] == 1),
+                'weight': 1
+        }
+        uc2_wght_mask = {
+                'mask' : (self.reg_data['UC'] == 2),
+                'weight': 1
+        }
+        
+        uc3_wght_mask = {
+                'mask' : (self.reg_data['UC'] == 3),
+                'weight': 1
+        }
+        
+        all_data = MetricsData.get_cumul_scaled(self.reg_data).loc[mask]
+
+        uc1_data = MetricsData.get_cumul_scaled(self.reg_data, weighted_masks=[uc1_wght_mask,comm_wght_mask]).loc[mask & ( uc1_wght_mask['mask']| comm_wght_mask['mask'])]
+        uc2_data = MetricsData.get_cumul_scaled(self.reg_data, weighted_masks=[uc2_wght_mask,comm_wght_mask]).loc[mask & ( uc2_wght_mask['mask']| comm_wght_mask['mask'])]
+        uc3_data = MetricsData.get_cumul_scaled(self.reg_data, weighted_masks=[uc3_wght_mask,comm_wght_mask]).loc[mask & ( uc3_wght_mask['mask']| comm_wght_mask['mask'])]
+
+        fig = go.Figure()
+
+        fig.add_trace(go.Scatter(
+            x=all_data['registrationTime'],
+            y=all_data['cumsum'],
+            mode='lines+markers',
+            line_shape='hv',  # step ECDF
+            name='All Use Cases',
+            marker=dict(color=self.TOT_COL)
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=uc1_data['registrationTime'],
+            y=uc1_data['cumsum'],
+            mode='lines+markers',
+            line_shape='hv',  # step ECDF
+            name='Use Case 1',
+            marker=dict(color=self.UC1_COL)
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=uc2_data['registrationTime'],
+            y=uc2_data['cumsum'],
+            mode='lines+markers',
+            line_shape='hv',  # step ECDF
+            name='Use Case 2',
+            marker=dict(color=self.UC2_COL)
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=uc3_data['registrationTime'],
+            y=uc3_data['cumsum'],
+            mode='lines+markers',
+            line_shape='hv',  # step ECDF
+            name='Use Case 3',
+            marker=dict(color=self.UC3_COL)
+        ))
+
+        # uc1_data = self.reg_data.loc[mask_all & ((self.reg_data['UC'] == 1) | (self.reg_data['UC'] == -1))]
+        # uc2_data = self.reg_data.loc[mask_all & ((self.reg_data['UC'] == 2) | (self.reg_data['UC'] == -1))]
+        # uc3_data = self.reg_data.loc[mask_all & ((self.reg_data['UC'] == 3) | (self.reg_data['UC'] == -1))]
+        # # breakpoint()
+        # https://plotly.com/python/ecdf-plots/
+        # fig = px.ecdf(self.reg_data.loc[mask_all], x='registrationTime', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.TOT_COL])
+        # # breakpoint()
+        # uc1 = px.ecdf(uc1_data, x='registrationTime', y='counts', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.UC1_COL])
+        # uc2 = px.ecdf(uc2_data, x='registrationTime', y='counts', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.UC2_COL])
+        # uc3 = px.ecdf(uc3_data, x='registrationTime', y='counts', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.UC3_COL])
+        
+        # for trace in uc1.data:
+        #     fig.add_trace(trace)
+        # for trace in uc2.data:
+        #     fig.add_trace(trace)
+        # for trace in uc3.data:
+        #     fig.add_trace(trace)
+        
+        mask_event = get_mask(self.evt_data.end, start, end)
         
         # positions = ["bottom left","top left"]
         positions = range(20,220,20)
         cnt = 0
-        for event in self.evt_data.itertuples():
+        for event in self.evt_data.loc[mask_event].itertuples():
             fig.add_vrect(x0=event.start, x1=event.end, 
             #   annotation_text=event.name, annotation_position=positions[cnt],
               fillcolor=self.UC1_COL if event.UC == 1 else self.UC2_COL if event.UC == 2 else self.UC3_COL, opacity=0.20, line_width=0)
@@ -92,6 +159,12 @@ class DashRegistrations:
         #         annotation_font_size=15,
         #         annotation_font_color=self.UC3_COL
         #         )
+
+        fig.update_layout(
+            xaxis_title='Registration Time',
+            yaxis_title='Nr Users',
+            legend_title_text=None
+        )
             
         return fig
 

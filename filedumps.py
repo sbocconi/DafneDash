@@ -75,7 +75,6 @@ class FileDumps(DataDumps):
         # data['registrationTime'] = pd.to_datetime(data['registrationTime'], format=cls.CNT_DT_FRMT)
         # breakpoint()
         ucs = []
-        counts = []
         event_data = cls.get_keyed_data(CNTMGMT_KEY, EVENT_FLNM)
         for reg_row in data.itertuples():
             found = False
@@ -86,14 +85,11 @@ class FileDumps(DataDumps):
                     # breakpoint()
                     ucs.append(uc_row.UC)
                     found = True
-                    counts.append(1)
                     break
             if not found:
                 ucs.append(-1)
-                counts.append(1/3)
                 
         data['UC'] = ucs
-        data['counts'] = counts
         # breakpoint()
     
     @classmethod

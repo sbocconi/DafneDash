@@ -4,6 +4,7 @@ import pickle
 from pathlib import Path
 from datetime import datetime, timedelta
 import copy
+from typing import Any, Optional, List, Dict, Union, Tuple
 
 from globals import CNTMGMT_KEY, MARKETPLACE_KEY
 
@@ -157,14 +158,20 @@ class MetricsData:
     def max_ts(self):
         return int(pd.Timestamp(self.max_date()).timestamp())
     
-    def get_reg_cumul_scaled(self, scaling):
-        key1 = CNTMGMT_KEY
-        key2 = 'user-registrations'
-        cnt_data = copy.deepcopy(self.get_data(key1, key2))
+    @classmethod
+    def get_cumul_scaled(cls, data, scaling:int=1, weighted_masks:List[Dict[List[bool], int]] = None):
+        
+        cnt_data = copy.deepcopy(data)
         # breakpoint()
     
-        cnt_data['cumsum'] = 1
+        if weighted_masks is None:
+            cnt_data['cumsum'] = 1
+        else:
+            for weighted_mask in weighted_masks:
+                cnt_data.loc[weighted_mask['mask'],'cumsum'] = weighted_mask['weight']
+                # breakpoint()
         cnt_data['cumsum'] = cnt_data['cumsum'].cumsum()*scaling
+
         return cnt_data
 
     def get_creators(self):

@@ -4,7 +4,7 @@ import plotly.express as px # type: ignore
 import plotly.graph_objects as go
 
 
-from globals import SLD_ID, CREATORS_GRAPH_ID, thumbs
+from globals import SLD_ID, CREATORS_GRAPH_ID, thumbs, get_mask
 from metricsdata import MetricsData
 
 class DashCreators:
@@ -56,8 +56,7 @@ class DashCreators:
             end = tss[1]
         # breakpoint()
 
-        dt_idx = pd.DatetimeIndex(self.daily_creators['date']).view('int64') // 10**9
-        mask = (dt_idx > start) & (dt_idx <= end)
+        mask = get_mask(self.daily_creators['date'], start, end)
         
         sel_daily_creators = self.daily_creators.loc[mask]
         
@@ -66,14 +65,12 @@ class DashCreators:
         fig.add_trace(go.Scatter(x=sel_daily_creators['date'], y=sel_daily_creators['nr_daily_creators'], mode='lines', name='Unique creators per day'))
         fig.add_trace(go.Scatter(x=sel_daily_creators['date'], y=sel_daily_creators['nr_creators'], mode='lines', name=f"{DashCreators.CREATOR_THR}% total creators"))
 
-        # fig.update_layout(title="Two Lines from Same DataFrame")
-        
-        # for trace in nft_graph.data:
-        #     fig.add_trace(trace)
-        # for trace in free_graph.data:
-        #     fig.add_trace(trace)
-        # for trace in creator_graph.data:
-        #     fig.add_trace(trace)
+        fig.update_layout(
+            # title='Multiple ECDFs with Custom Colors and Legend',
+            xaxis_title='Time',
+            yaxis_title='Nr Creators',
+            # legend_title='Group',
+        )
         
         # breakpoint()
         

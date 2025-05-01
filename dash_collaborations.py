@@ -3,7 +3,7 @@ import pandas as pd # type: ignore
 import plotly.express as px # type: ignore
 import plotly.graph_objects as go
 
-from globals import SLD_ID, CNTMGMT_KEY, MARKETPLACE_KEY, COLLABORATIONS_GRAPH_ID, thumbs
+from globals import SLD_ID, CNTMGMT_KEY, MARKETPLACE_KEY, COLLABORATIONS_GRAPH_ID, thumbs, get_mask
 from metricsdata import MetricsData
 
 class DashCollaborations:
@@ -43,11 +43,10 @@ class DashCollaborations:
             start = tss[0]
             end = tss[1]
         # breakpoint()
-        dt_idx = pd.DatetimeIndex(self.added_contributors.dateTime).view('int64') // 10**9
-        mask_contrib = (dt_idx > start) & (dt_idx <= end)
-
-        dt_idx = pd.DatetimeIndex(self.versions.created).view('int64') // 10**9
-        mask_versions = (dt_idx > start) & (dt_idx <= end)
+        
+        
+        mask_contrib = get_mask(self.added_contributors.dateTime, start, end)
+        mask_versions = get_mask(self.versions.created, start, end)
         # all_data = self.added_contributors[mask]
         # daily_token_creators = self.token_generating_creators(start, end)
         
@@ -65,9 +64,10 @@ class DashCollaborations:
 
         # Sort by time
         df_combined = df_combined.sort_values('time').reset_index(drop=True)
-
+        
+        mask_all = get_mask(df_combined.time, start, end)
         # Generate ECDF
-        tot_fig = px.ecdf(df_combined, x='time', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[DashCollaborations.TOT_COL])
+        tot_fig = px.ecdf(df_combined.loc[mask_all], x='time', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[DashCollaborations.TOT_COL])
 
 
         # breakpoint()
@@ -102,7 +102,7 @@ class DashCollaborations:
         fig.update_layout(
             # title='Multiple ECDFs with Custom Colors and Legend',
             xaxis_title='Time',
-            yaxis_title='Nr of sharings',
+            yaxis_title='Nr Sharings',
             # legend_title='Group',
         )
 

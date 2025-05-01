@@ -1,8 +1,9 @@
 from dash import Dash, html, dash_table, dependencies, dcc, callback, Output, Input # type: ignore
 import pandas as pd # type: ignore
 import plotly.express as px # type: ignore
+import plotly.graph_objects as go
 
-from globals import SLD_ID, MARKETPLACE_KEY, MARKETPLACE_GRAPH_ID, thumbs
+from globals import SLD_ID, MARKETPLACE_KEY, MARKETPLACE_GRAPH_ID, thumbs, get_mask
 from metricsdata import MetricsData
 
 class DashMarketPlace:
@@ -62,37 +63,63 @@ class DashMarketPlace:
             start = tss[0]
             end = tss[1]
         # breakpoint()
-        dt_idx = pd.DatetimeIndex(self.mp_items.created).view('int64') // 10**9
-        mask = (dt_idx > start) & (dt_idx <= end)
-        all_data = self.mp_items.loc[mask]
-        nft_data = self.mp_items.loc[mask & (~self.mp_items['nft'].isnull())]
-        free_data = self.mp_items.loc[mask & (self.mp_items['nft'].isnull())]
-        # daily_token_creators = self.token_generating_creators(start, end)
+        mask = get_mask(self.mp_items.created, start, end)
+        # all_data = self.mp_items.loc[mask]
+        # nft_data = self.mp_items.loc[mask & (~self.mp_items['nft'].isnull())]
+        # free_data = self.mp_items.loc[mask & (self.mp_items['nft'].isnull())]
+    
+        all_data = MetricsData.get_cumul_scaled(self.mp_items).loc[mask]
+        nft_data = MetricsData.get_cumul_scaled(self.mp_items.loc[~self.mp_items['nft'].isnull()]).loc[mask & (~self.mp_items['nft'].isnull())]
+        free_data = MetricsData.get_cumul_scaled(self.mp_items.loc[self.mp_items['nft'].isnull()]).loc[mask & (self.mp_items['nft'].isnull())]
         
-        # breakpoint()
-        fig = px.ecdf(all_data, x='created', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.TOT_COL])
-        # breakpoint()
-        nft_graph = px.ecdf(nft_data, x='created', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.NTF_COL])
-        free_graph = px.ecdf(free_data, x='created', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.FREE_COL])
+        fig = go.Figure()
+
+        fig.add_trace(go.Scatter(
+            x=all_data['created'],
+            y=all_data['cumsum'],
+            mode='lines+markers',
+            line_shape='hv',  # step ECDF
+            name='Total items',
+            marker=dict(color=self.TOT_COL)
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=nft_data['created'],
+            y=nft_data['cumsum'],
+            mode='lines+markers',
+            line_shape='hv',  # step ECDF
+            name='NFTs',
+            marker=dict(color=self.NTF_COL)
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=free_data['created'],
+            y=free_data['cumsum'],
+            mode='lines+markers',
+            line_shape='hv',  # step ECDF
+            name='Free Items',
+            marker=dict(color=self.FREE_COL)
+        ))
+
+        
+        # # breakpoint()
+        # fig = px.ecdf(all_data, x='created', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.TOT_COL])
+        # # breakpoint()
+        # nft_graph = px.ecdf(nft_data, x='created', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.NTF_COL])
+        # free_graph = px.ecdf(free_data, x='created', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[self.FREE_COL])
         # creator_graph = px.line(daily_token_creators, x='date', y="nr_creators")
         
-        for trace in nft_graph.data:
-            fig.add_trace(trace)
-        for trace in free_graph.data:
-            fig.add_trace(trace)
-        # for trace in creator_graph.data:
+        # for trace in nft_graph.data:
         #     fig.add_trace(trace)
-        
-        # breakpoint()
-        
-        # if start == self.min and end == self.max:
-        #     fig.add_hline(y=len(self.creators)/50*self.SCALING, line_dash="dashdot", line_width=0.5, line_color=self.TOT_COL,
-        #         annotation_text="KPI_9 Creators generating tokens daily >2%", 
-        #         annotation_position="top left",
-        #         annotation_font_size=15,
-        #         annotation_font_color=self.TOT_COL
-        #         )
-            
+        # for trace in free_graph.data:
+        #     fig.add_trace(trace)
+
+        fig.update_layout(
+            xaxis_title='Creation Time',
+            yaxis_title='Cumulative Count',
+            # title='Manual ECDF (Standard Mode)',
+            legend_title_text=None
+        )
         return fig
 
     def items_per_creator(self):
