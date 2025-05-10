@@ -45,18 +45,18 @@ class DashCollaborations:
         # breakpoint()
         
         
-        mask_contrib = get_mask(self.added_contributors.dateTime, start, end)
+        mask_contrib = get_mask(self.added_contributors.creationDate, start, end)
         mask_versions = get_mask(self.versions.created, start, end)
         # all_data = self.added_contributors[mask]
         # daily_token_creators = self.token_generating_creators(start, end)
         
         # breakpoint()
-        collab_fig = px.ecdf(self.added_contributors[mask_contrib], x='dateTime', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[DashCollaborations.COLLAB_COL])
+        collab_fig = px.ecdf(self.added_contributors[mask_contrib], x='creationDate', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[DashCollaborations.COLLAB_COL])
         
         version_fig = px.ecdf(self.versions[mask_versions], x='created', ecdfmode="standard", ecdfnorm=None, markers=True, color_discrete_sequence=[DashCollaborations.VERSION_COL])
 
         # Select and rename columns so they match
-        collab_renamed = self.added_contributors[['dateTime']].rename(columns={'dateTime': 'time'})
+        collab_renamed = self.added_contributors[['creationDate']].rename(columns={'creationDate': 'time'})
         versions_renamed = self.versions[['created']].rename(columns={'created': 'time'})
 
         # Combine the data

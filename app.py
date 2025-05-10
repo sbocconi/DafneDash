@@ -24,7 +24,7 @@ def main():
         APIDumps.init(metr_data)
         metr_data.save_metrics()
     
-    metr_data.max_date()
+    # metr_data.max_date()
     app = Dash(__name__)
     # breakpoint()
     reg_graph = DashRegistrations(metr_data.get_data(CNTMGMT_KEY,'user-registrations'), metr_data.get_data(CNTMGMT_KEY, EVENT_FLNM), metr_data.min_ts(), metr_data.now(), app)

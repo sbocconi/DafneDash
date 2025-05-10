@@ -20,10 +20,10 @@ class MetricsData:
     MAPPING = {
                 'cntmgmt - events' : {'userid' : None, 'date': ['start', 'end']},
                 'cntmgmt - contents' : {'userid' :'creator', 'date': ['creationDate']},
-                'cntmgmt - contributors' : {'userid' :'userAdding', 'date': ['dateTime']},
+                'cntmgmt - contributors' : {'userid' :'userAdding', 'date': ['creationDate']},
                 'cntmgmt - organizations' : {'userid' :'owner', 'date': ['creationDate']},
                 'cntmgmt - proposals': {'userid' :'proposerName', 'date': ['creationDate']},
-                'cntmgmt - proposals-votes' : {'userid' :'user', 'date': ['date']},
+                'cntmgmt - proposals-votes' : {'userid' :'user', 'date': ['creationDate']},
                 'cntmgmt - teams' : {'userid' :'owner', 'date': ['creationDate']},
                 'cntmgmt - user-registrations' : {'userid' :'username', 'date': ['registrationTime'], 'format': CNT_DT_FRMT},
                 'tools - ObjectReconstuctionTool' : {'userid' :'user', 'date': ['access_date']},
@@ -53,6 +53,8 @@ class MetricsData:
             }
         date_fields, format = MetricsData.get_dates_field(category, key)
         for date_field in date_fields:
+            if date_field not in self.data_container[category][key]['data']:
+                raise Exception(f'Field {date_field} is not in {category}-{key}')
             if format is not None:
                 self.data_container[category][key]['data'][date_field] = pd.to_datetime(self.data_container[category][key]['data'][date_field], utc=True, format=format)
             else:
