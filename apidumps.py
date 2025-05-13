@@ -6,7 +6,7 @@ from requests.exceptions import RequestException
 
 from datadumps import DataDumps, read_yaml
 from metricsdata import MetricsData
-from globals import TOOLS_KEY, MARKETPLACE_KEY
+from globals import USER_TOOLS_KEY, MARKETPLACE_KEY
 from dafnekeycloak import DafneKeycloak
 
 class APIDumps(DataDumps):
@@ -59,7 +59,7 @@ class APIDumps(DataDumps):
                         username = usage['username'] if tool[f'{tool_name}']['encoded_users'] else MetricsData.encode_user(usage['username'])
                         date = cls.convert_date_frmt(usage['timestamp'],MetricsData.SYNTL_DT_FRMT, MetricsData.CNT_DT_FRMT)
                         data.append([username,date])
-                    cls.set_keyed_data(TOOLS_KEY, tool_name, cls.get_tools_df(data))
+                    cls.set_keyed_data(USER_TOOLS_KEY, tool_name, cls.get_user_tools_df(data))
                     # breakpoint()
                 except Exception as e:
                     print(e)

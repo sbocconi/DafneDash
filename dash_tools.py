@@ -2,15 +2,15 @@ from dash import Dash, html, dash_table, dependencies, dcc, callback, Output, In
 import pandas as pd # type: ignore
 import plotly.express as px # type: ignore
 
-from globals import SLD_ID, TOOLS_GRAPH_ID, thumbs, get_mask
+from globals import SLD_ID, USER_TOOLS_GRAPH_ID, USAGE_VIEWS_TOOLS_GRAPH_ID, USAGE_DOWNLOADS_TOOLS_GRAPH_ID, thumbs, get_mask
 from metricsdata import MetricsData
 
 class DashTools:
     TOT_COL = 'black'
 
-    def __init__(self, tools_data, creators, min, max, app):
-        self.tools_data = DashTools.flatten_pd(tools_data)
-        # breakpoint()
+    def __init__(self, user_tools_data, usage_tools_data, creators, min, max, app):
+        self.user_tools_data = DashTools.flatten_pd(user_tools_data)
+        self.usage_tools_data = usage_tools_data
         self.creators = creators
         self.usage_tools_per_creator()
         # breakpoint()
@@ -18,9 +18,18 @@ class DashTools:
         self.max = max
         self.app = app
         self.app.callback(
-            dependencies.Output(TOOLS_GRAPH_ID, "figure"),
+            dependencies.Output(USER_TOOLS_GRAPH_ID, "figure"),
             dependencies.Input(SLD_ID, "value")
-            )(self.tools_tl_updt)
+            )(self.user_tools_tl_updt)
+        self.app.callback(
+            dependencies.Output(USAGE_VIEWS_TOOLS_GRAPH_ID, "figure"),
+            dependencies.Input(SLD_ID, "value")
+            )(self.usage_views_tools_tl_updt)
+        self.app.callback(
+            dependencies.Output(USAGE_DOWNLOADS_TOOLS_GRAPH_ID, "figure"),
+            dependencies.Input(SLD_ID, "value")
+            )(self.usage_downloads_tools_tl_updt)
+        
     
     @classmethod
     def flatten_pd(cls, data):
@@ -33,7 +42,7 @@ class DashTools:
         return df
     
     
-    def tools_tl_updt(self,tss):
+    def user_tools_tl_updt(self,tss):
         if tss == None:
             start = self.min
             end = self.max
@@ -41,13 +50,13 @@ class DashTools:
             start = tss[0]
             end = tss[1]
         # breakpoint()
-        mask = get_mask(self.tools_data.access_date, start, end)
+        mask = get_mask(self.user_tools_data.access_date, start, end)
         
-        tools = set(self.tools_data['tool'].loc[mask])
+        tools = set(self.user_tools_data['tool'].loc[mask])
         self.tools_df = pd.DataFrame(columns=["tool","total_usage", "unique_users"])
         for tool in tools:
-            unique_users = len(set(self.tools_data.loc[mask & (self.tools_data['tool'] == tool)]['user']))
-            total_usage = len(self.tools_data.loc[mask & (self.tools_data['tool'] == tool)])
+            unique_users = len(set(self.user_tools_data.loc[mask & (self.user_tools_data['tool'] == tool)]['user']))
+            total_usage = len(self.user_tools_data.loc[mask & (self.user_tools_data['tool'] == tool)])
             self.tools_df.loc[len(self.tools_df)] = [tool, total_usage, unique_users]
         # breakpoint()
         # fig = px.histogram(self.tools_data[mask], x="tool")
@@ -62,13 +71,57 @@ class DashTools:
 
         return fig
 
+    def usage_tools_tl_updt(self,tss, field):
+        if tss == None:
+            start = self.min
+            end = self.max
+        else:
+            start = tss[0]
+            end = tss[1]
+        # breakpoint()
+        mask = get_mask(self.usage_tools_data.Year, start, end, is_year=True)
+        
+        # Get just the year as string
+        usage_dt = self.usage_tools_data.loc[mask]
+        usage_dt['Year'] = usage_dt['Year'].dt.year.astype(str)
+
+        df_totals = usage_dt.groupby('Projects', as_index=False).agg({field: 'sum'})
+        df_totals['Year'] = 'Total'
+        df_long = pd.concat([usage_dt, df_totals], ignore_index=True)
+
+        # Force order of bars
+        df_long['Year'] = pd.Categorical(df_long['Year'], categories=['2023', '2024', '2025', 'Total'], ordered=True)
+
+        # Plot
+        # breakpoint()
+        fig = px.bar(df_long, x='Year', y=field, color='Projects', barmode='group')
+
+        fig.update_yaxes(type='log')
+
+        fig.update_layout(
+            xaxis_title='Year',
+            yaxis_title='Usage (Log base 10)',
+            legend_title_text=None
+        )
+
+        return fig
+    
+    def usage_views_tools_tl_updt(self,tss):
+        
+        return self.usage_tools_tl_updt(tss,'Page Views')
+
+    def usage_downloads_tools_tl_updt(self,tss):
+        
+        return self.usage_tools_tl_updt(tss,'Downloads')
+
+
     def usage_tools_per_creator(self):
         tot = 0
         self.tot_users_zero = 0
         self.tot_users_one = 0
         self.tot_users_more = 0
         for creator in self.creators:
-            tools_per_creator = self.tools_data.loc[self.tools_data['user'] == creator]
+            tools_per_creator = self.user_tools_data.loc[self.user_tools_data['user'] == creator]
             if len(tools_per_creator) == 0:
                 self.tot_users_zero = self.tot_users_zero + 1
             else:
@@ -86,10 +139,15 @@ class DashTools:
         
         return html.Div(
                 [
-                    html.H2("Tools Usage"),
+                    html.H2("Platform Tools Usage"),
                     html.H3(f"KPI_6 Usage of provided production components/ workflows > 1 per creator {thumbs(self.tot_users_zero==0 and self.tot_users_one==0)}"),
                     html.P(f"More info: Total creators: {len(self.creators)}, average tool usage per creator: {self.avg_usage_per_creator}"),
                     html.P(f"Users with no tool usage: {self.tot_users_zero}, one usage: {self.tot_users_one}, more usages: {self.tot_users_more}"),
-                    dcc.Graph(id=TOOLS_GRAPH_ID)
+                    dcc.Graph(id=USER_TOOLS_GRAPH_ID),
+                    html.H2("IRCAM Tools Usage"),
+                    html.H3(f"Page Views"),
+                    dcc.Graph(id=USAGE_VIEWS_TOOLS_GRAPH_ID),
+                    html.H3(f"Downloads"),
+                    dcc.Graph(id=USAGE_DOWNLOADS_TOOLS_GRAPH_ID)
                 ],
             )

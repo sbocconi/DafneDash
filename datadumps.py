@@ -37,7 +37,7 @@ class DataDumps:
         return datetime.strptime(date, frmt_in).strftime(frmt_out)
     
     @classmethod
-    def get_tools_df(cls, data):
+    def get_user_tools_df(cls, data):
         df = pd.DataFrame(columns=["user", "access_date"])
         # df = df.astype({"access_date": "datetime64[ns]"})
         for tuple in data:

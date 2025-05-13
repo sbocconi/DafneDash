@@ -1,6 +1,6 @@
 from dash import Dash, html, dash_table, dependencies, dcc, callback, Output, Input # type: ignore
 
-from globals import EVENT_FLNM, CNTMGMT_KEY, TOOLS_KEY, MARKETPLACE_KEY
+from globals import EVENT_FLNM, CNTMGMT_KEY, USER_TOOLS_KEY, USAGE_TOOLS_KEY, MARKETPLACE_KEY, IRCAM
 from filedumps import FileDumps
 from apidumps import APIDumps
 from metricsdata import MetricsData
@@ -29,7 +29,7 @@ def main(refresh:bool):
     # breakpoint()
     reg_graph = DashRegistrations(metr_data.get_data(CNTMGMT_KEY,'user-registrations'), metr_data.get_data(CNTMGMT_KEY, EVENT_FLNM), metr_data.min_ts(), metr_data.now(), app)
     marketplace_graph = DashMarketPlace(metr_data, metr_data.min_ts(), metr_data.now(), app)
-    tools_graph = DashTools(metr_data.get_data(TOOLS_KEY), metr_data.get_creators(), metr_data.min_ts(), metr_data.now(), app)
+    tools_graph = DashTools(metr_data.get_data(USER_TOOLS_KEY), metr_data.get_data(USAGE_TOOLS_KEY, IRCAM), metr_data.get_creators(), metr_data.min_ts(), metr_data.now(), app)
     creators_graph = DashCreators(metr_data.get_data(MARKETPLACE_KEY), metr_data.min_ts(), metr_data.now(), app)
     actions_graph = DashActions(metr_data, metr_data.min_ts(), metr_data.now(), app)
     sharing_graph = DashCollaborations(metr_data, metr_data.min_ts(), metr_data.now(), app)
@@ -47,11 +47,11 @@ def main(refresh:bool):
             ),
             slider.as_html(),
             reg_graph.as_html(),
-            tools_graph.as_html(),
             marketplace_graph.as_html(),
             creators_graph.as_html(),
             actions_graph.as_html(),
             sharing_graph.as_html(),
+            tools_graph.as_html(),
         ]
     )
     

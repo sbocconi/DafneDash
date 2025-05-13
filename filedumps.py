@@ -5,7 +5,7 @@ from pathlib import Path
 
 from datadumps import DataDumps
 from metricsdata import MetricsData
-from globals import DATAEXP_DIR, CNTMGMT_KEY, TOOLS_KEY, EVENT_FLNM
+from globals import DATAEXP_DIR, CNTMGMT_KEY, USER_TOOLS_KEY, USAGE_TOOLS_KEY, EVENT_FLNM, IRCAM
 
 class FileDumps(DataDumps):
 
@@ -20,6 +20,7 @@ class FileDumps(DataDumps):
         cls.read_events()
         cls.assign_UC()
         cls.read_certhtools()
+        cls.read_ircamtools()
 
     @classmethod
     def read_cntmgmt(cls):
@@ -30,8 +31,10 @@ class FileDumps(DataDumps):
     
     @classmethod
     def read_certhtools(cls):
-        xlsxfiles = [file for file in glob.iglob(f'{DATAEXP_DIR}/{TOOLS_KEY}/*.xlsx', recursive=False)]
+        xlsxfiles = [file for file in glob.iglob(f'{DATAEXP_DIR}/{USER_TOOLS_KEY}/*.xlsx', recursive=False)]
         for xlsxfile in xlsxfiles:
+            if len(pd.ExcelFile(xlsxfile).sheet_names) != 1:
+                raise Exception(f"Unexpected multile tabs in {xlsxfile}: {pd.ExcelFile(xlsxfile).sheet_names}")
             content = pd.read_excel(xlsxfile).dropna(axis=1, how='all')
             data = {}
             for row in content.itertuples():
@@ -45,7 +48,37 @@ class FileDumps(DataDumps):
                 data[f'{tool}'].append([username,use_date])
                 # data.append([key,username,use_date])
             for key in data.keys():
-                cls.set_keyed_data(TOOLS_KEY, key, cls.get_tools_df(data[f'{key}']))
+                cls.set_keyed_data(USER_TOOLS_KEY, key, cls.get_user_tools_df(data[f'{key}']))
+            # breakpoint()
+    
+    @classmethod
+    def read_ircamtools(cls):
+        xlsxfiles = [file for file in glob.iglob(f'{DATAEXP_DIR}/{USAGE_TOOLS_KEY}/*.xlsx', recursive=False)]
+        for xlsxfile in xlsxfiles:
+            if len(pd.ExcelFile(xlsxfile).sheet_names) != 2:
+                raise Exception(f"Unexpected multile tabs in {xlsxfile}: {pd.ExcelFile(xlsxfile).sheet_names}")
+            tabs = pd.read_excel(xlsxfile, sheet_name=None)
+            first = True
+            prfx = 'IRCAM Forum Software '
+            for key in tabs.keys():
+                # breakpoint()
+                content = tabs[key].dropna(axis=1, how='all')
+                value = key[len(prfx):]
+                cnt_long = content.drop(columns=content.columns[-1]).melt(
+                    id_vars=content.columns[0],
+                    # value_vars=list(content.columns[1:-1]),
+                    var_name='Year',
+                    value_name=value
+                )
+                if first:
+                    data = cnt_long
+                    first = False
+                else:
+                    data = data.merge(cnt_long, how='outer')
+            # breakpoint()
+                
+            
+            cls.set_keyed_data(USAGE_TOOLS_KEY, IRCAM, data)
             # breakpoint()
 
     @classmethod

@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import copy
 from typing import Any, Optional, List, Dict, Union, Tuple
 
-from globals import CNTMGMT_KEY, MARKETPLACE_KEY
+from globals import CNTMGMT_KEY, MARKETPLACE_KEY, CNTMGMT_KEY, MARKETPLACE_KEY, USER_TOOLS_KEY, USAGE_TOOLS_KEY, IRCAM
 
 class MetricsData:
     MTRCS_FILE = 'metrics.pkl'
@@ -16,26 +16,27 @@ class MetricsData:
     CNT_DT_FRMT = "%Y-%m-%dT%H:%M:%SZ"
     CERTL_DT_FRMT = "/%m/%d/%Y"
     MP_DT_FRMT = '%Y-%m-%dT%H:%M:%S.%fZ'
+    YEAR_DT_FRMT = "%Y"
 
 
     MAPPING = {
-                'cntmgmt - events' : {'userid' : None, 'date': ['start', 'end']},
-                'cntmgmt - contents' : {'userid' :'creator', 'date': ['creationDate']},
-                'cntmgmt - contributors' : {'userid' :'userAdding', 'date': ['creationDate']},
-                'cntmgmt - organizations' : {'userid' :'owner', 'date': ['creationDate']},
-                'cntmgmt - proposals': {'userid' :'proposerName', 'date': ['creationDate']},
-                'cntmgmt - proposals-votes' : {'userid' :'user', 'date': ['creationDate']},
-                'cntmgmt - teams' : {'userid' :'owner', 'date': ['creationDate']},
-                'cntmgmt - user-registrations' : {'userid' :'username', 'date': ['registrationTime'], 'format': CNT_DT_FRMT},
-                'tools - ObjectReconstuctionTool' : {'userid' :'user', 'date': ['access_date']},
-                'tools - PoseEstimationTool' : {'userid' :'user', 'date': ['access_date']},
-                'tools - VirtualAvatarPersonalizationTool' : {'userid' :'user', 'date': ['access_date']},
-                'tools - style_transfer' : {'userid' :'user', 'date': ['access_date']},
-                'marketplace - nft_items' : {'userid' :'creator_name', 'date': []},
-                'marketplace - marketplace_items' : {'userid' :'creator', 'date': ['created', 'modified']},
-                'marketplace - ratings' : {'userid' :'user', 'date': ['rated_at']},
-                'marketplace - reports' : {'userid' :'reporter', 'date': ['report_received', 'warning_sent']},
-                
+                f'{CNTMGMT_KEY} - events' : {'userid' : None, 'date': ['start', 'end']},
+                f'{CNTMGMT_KEY} - contents' : {'userid' :'creator', 'date': ['creationDate']},
+                f'{CNTMGMT_KEY} - contributors' : {'userid' :'userAdding', 'date': ['creationDate']},
+                f'{CNTMGMT_KEY} - organizations' : {'userid' :'owner', 'date': ['creationDate']},
+                f'{CNTMGMT_KEY} - proposals': {'userid' :'proposerName', 'date': ['creationDate']},
+                f'{CNTMGMT_KEY} - proposals-votes' : {'userid' :'user', 'date': ['creationDate']},
+                f'{CNTMGMT_KEY} - teams' : {'userid' :'owner', 'date': ['creationDate']},
+                f'{CNTMGMT_KEY} - user-registrations' : {'userid' :'username', 'date': ['registrationTime'], 'format': CNT_DT_FRMT},
+                f'{USER_TOOLS_KEY} - ObjectReconstuctionTool' : {'userid' :'user', 'date': ['access_date']},
+                f'{USER_TOOLS_KEY} - PoseEstimationTool' : {'userid' :'user', 'date': ['access_date']},
+                f'{USER_TOOLS_KEY} - VirtualAvatarPersonalizationTool' : {'userid' :'user', 'date': ['access_date']},
+                f'{USER_TOOLS_KEY} - style_transfer' : {'userid' :'user', 'date': ['access_date']},
+                f'{MARKETPLACE_KEY} - nft_items' : {'userid' :'creator_name', 'date': []},
+                f'{MARKETPLACE_KEY} - marketplace_items' : {'userid' :'creator', 'date': ['created', 'modified']},
+                f'{MARKETPLACE_KEY} - ratings' : {'userid' :'user', 'date': ['rated_at']},
+                f'{MARKETPLACE_KEY} - reports' : {'userid' :'reporter', 'date': ['report_received', 'warning_sent']},
+                f'{USAGE_TOOLS_KEY} - {IRCAM}' : {'userid' : None, 'date': ['Year'], 'format': YEAR_DT_FRMT},
                 }
 
 
