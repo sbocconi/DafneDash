@@ -174,3 +174,4 @@ cython_debug/
 *.yml
 TODO.txt
 metrics.pkl
+metrics.pkl.bak

@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 import hashlib
 import pickle
 from pathlib import Path
@@ -128,13 +129,17 @@ class MetricsData:
             pickle.dump(self.data_container, f)
 
     @classmethod
-    def read_metrics(cls):
+    def read_metrics(cls, refresh):
         metrics_file = Path(cls.MTRCS_FILE)
         if metrics_file.is_file():
-            with open(cls.MTRCS_FILE, 'rb') as f: 
-                data = pickle.load(f)
-            # breakpoint()
-            return MetricsData(data)
+            if refresh:
+                os.rename(cls.MTRCS_FILE, f"{cls.MTRCS_FILE}.bak")
+                return None
+            else:
+                with open(cls.MTRCS_FILE, 'rb') as f: 
+                    data = pickle.load(f)
+                # breakpoint()
+                return MetricsData(data)
         return None
 
     @classmethod

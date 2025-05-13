@@ -12,10 +12,10 @@ from dash_creators import DashCreators
 from dash_actions import DashActions
 from dash_collaborations import DashCollaborations
 
-def main():
+def main(refresh:bool):
     # Initialize the app
     
-    metr_data = MetricsData.read_metrics()
+    metr_data = MetricsData.read_metrics(refresh=refresh)
     # breakpoint()
     if metr_data is None:
         metr_data = MetricsData()
@@ -69,14 +69,14 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    # parser.add_argument(
-    #     '-d', '--dir',
-    #     dest='dir',
-    #     action='store',
-    #     required=False,
-    #     default='/Users/SB/Projects/Software/Dyne/Dafne/DataExports',
-    #     help='specifies the directory where the db dumps are stored',
-    # )
+    parser.add_argument(
+        '-r', '--refresh',
+        dest='refresh',
+        action='store_true',
+        required=False,
+        default=False,
+        help='specifies whether to fetch new data from the API',
+    )
 
     # parser.add_argument(
     #     '-e','--event',
@@ -96,8 +96,7 @@ if __name__ == "__main__":
         exit(-1)
 
 
-    # main(dir=args.dir, event=args.event)
-    main()
+    main(refresh=args.refresh)
 
 # TODO
 # Save the graphs https://gist.github.com/exzhawk/33e5dcfc8859e3b6ff4e5269b1ba0ba4
