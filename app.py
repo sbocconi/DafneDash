@@ -1,4 +1,5 @@
 from dash import Dash, html, dash_table, dependencies, dcc, callback, Output, Input # type: ignore
+import plotly.graph_objects as go
 
 from globals import EVENT_FLNM, CNTMGMT_KEY, USER_TOOLS_KEY, USAGE_TOOLS_KEY, MARKETPLACE_KEY, IRCAM
 from filedumps import FileDumps
@@ -24,16 +25,18 @@ def main(refresh:bool):
         APIDumps.init(metr_data)
         metr_data.save_metrics()
     
-    # metr_data.max_date()
+    # Fix random plotly errors
+    # see this: https://github.com/plotly/plotly.py/issues/3441
+    go.Figure(layout=dict(template='plotly'))
+
     app = Dash(__name__)
     # breakpoint()
     reg_graph = DashRegistrations(metr_data.get_data(CNTMGMT_KEY,'user-registrations'), metr_data.get_data(CNTMGMT_KEY, EVENT_FLNM), metr_data.min_ts(), metr_data.now(), app)
-    marketplace_graph = DashMarketPlace(metr_data, metr_data.min_ts(), metr_data.now(), app)
-    tools_graph = DashTools(metr_data.get_data(USER_TOOLS_KEY), metr_data.get_data(USAGE_TOOLS_KEY, IRCAM), metr_data.get_creators(), metr_data.min_ts(), metr_data.now(), app)
+    marketplace_graph = DashMarketPlace(metr_data, metr_data.min_ts(), metr_data.now(), app)    
     creators_graph = DashCreators(metr_data.get_data(MARKETPLACE_KEY), metr_data.min_ts(), metr_data.now(), app)
     actions_graph = DashActions(metr_data, metr_data.min_ts(), metr_data.now(), app)
     sharing_graph = DashCollaborations(metr_data, metr_data.min_ts(), metr_data.now(), app)
-        
+    tools_graph = DashTools(metr_data.get_data(USER_TOOLS_KEY), metr_data.get_data(USAGE_TOOLS_KEY, IRCAM), metr_data.get_creators(), metr_data.min_ts(), metr_data.now(), app)
     
     # breakpoint()
     

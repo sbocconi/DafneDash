@@ -60,14 +60,19 @@ class DashTools:
             self.tools_df.loc[len(self.tools_df)] = [tool, total_usage, unique_users]
         # breakpoint()
         # fig = px.histogram(self.tools_data[mask], x="tool")
-        fig = px.bar(self.tools_df, x="tool", y=["total_usage","unique_users"], barmode="group")
-        # breakpoint()
-
-        fig.update_layout(
-            xaxis_title='Tool Name',
-            yaxis_title='Usage / Users',
-            legend_title_text=None
-        )
+        fig = None
+        try:
+            fig = px.bar(self.tools_df, x="tool", y=["total_usage","unique_users"], barmode="group")
+        except ValueError as e:
+            # breakpoint()
+            print(f"Error {e}")
+            
+        else:
+            fig.update_layout(
+                xaxis_title='Tool Name',
+                yaxis_title='Usage / Users',
+                legend_title_text=None
+            )
 
         return fig
 
@@ -82,7 +87,8 @@ class DashTools:
         mask = get_mask(self.usage_tools_data.Year, start, end, is_year=True)
         
         # Get just the year as string
-        usage_dt = self.usage_tools_data.loc[mask]
+        # usage_dt = self.usage_tools_data.loc[mask]
+        usage_dt = self.usage_tools_data.copy().loc[mask]
         usage_dt['Year'] = usage_dt['Year'].dt.year.astype(str)
 
         df_totals = usage_dt.groupby('Projects', as_index=False).agg({field: 'sum'})
@@ -94,15 +100,20 @@ class DashTools:
 
         # Plot
         # breakpoint()
-        fig = px.bar(df_long, x='Year', y=field, color='Projects', barmode='group')
+        fig = None
+        try:
+            fig = px.bar(df_long, x='Year', y=field, color='Projects', barmode='group')
+        except ValueError as e:
+            # breakpoint()
+            print(f"Error {e}")
+        else:
+            fig.update_yaxes(type='log')
 
-        fig.update_yaxes(type='log')
-
-        fig.update_layout(
-            xaxis_title='Year',
-            yaxis_title='Usage (Log base 10)',
-            legend_title_text=None
-        )
+            fig.update_layout(
+                xaxis_title='Year',
+                yaxis_title='Usage (Log base 10)',
+                legend_title_text=None
+            )
 
         return fig
     
