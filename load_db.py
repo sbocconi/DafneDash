@@ -11,6 +11,9 @@ import os
 
 from DafneDash.filedumps import read_xls
 
+# This file is in case we want to load xls files into a MariaDB
+# But it is not used at the moment as we load xls files directly into memory
+
 DATA_PATH = '../DataExports/'
 TMPLT_FILE = './load_db_tmpl.sql'
 DB = 'cont_mngm'

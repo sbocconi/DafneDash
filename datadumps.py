@@ -49,6 +49,18 @@ class DataDumps:
         return df
     
     @classmethod
+    def get_github_tools_df(cls, data):
+        df = pd.DataFrame(columns=["name","tag","date","download_cnt"])
+        # df = df.astype({"access_date": "datetime64[ns]"})
+        for tuple in data:
+            df.loc[len(df)] = tuple
+            # breakpoint()
+        
+        # df["access_date"] = pd.to_datetime(df["access_date"])
+        # breakpoint()
+        return df
+    
+    @classmethod
     def get_mp_items_df(cls, data):
         df = pd.DataFrame(columns=['id', 'name', 'type', 'owner','creator','created', 'modified', 'nft', 'version', 'version_parent', 'license', 'overall_rating'])
         # df = df.astype({"created": "datetime64[ns]", "modified": "datetime64[ns]"})

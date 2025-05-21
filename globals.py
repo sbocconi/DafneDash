@@ -19,6 +19,7 @@ USER_TOOLS_KEY = "user-tools"
 USAGE_TOOLS_KEY = "usage-tools"
 MARKETPLACE_KEY = "marketplace"
 IRCAM = 'ircam'
+GITHUB = 'github'
 
 def thumbs(condition):
     return '✅' if condition else '❌'

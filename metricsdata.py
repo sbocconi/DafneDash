@@ -7,12 +7,13 @@ from datetime import datetime, timedelta
 import copy
 from typing import Any, Optional, List, Dict, Union, Tuple
 
-from globals import CNTMGMT_KEY, MARKETPLACE_KEY, CNTMGMT_KEY, MARKETPLACE_KEY, USER_TOOLS_KEY, USAGE_TOOLS_KEY, IRCAM
+from globals import CNTMGMT_KEY, MARKETPLACE_KEY, CNTMGMT_KEY, MARKETPLACE_KEY, USER_TOOLS_KEY, USAGE_TOOLS_KEY, IRCAM, GITHUB
 
 class MetricsData:
     MTRCS_FILE = 'metrics.pkl'
  
     SYNTL_DT_FRMT = "%Y-%m-%dT%H:%M:%S.%f"
+    GITHUB_DT_FRMT = '%Y-%m-%dT%H:%M:%SZ'
     CNT_DT_FRMT = "%Y-%m-%dT%H:%M:%SZ"
     CERTL_DT_FRMT = "/%m/%d/%Y"
     MP_DT_FRMT = '%Y-%m-%dT%H:%M:%S.%fZ'
@@ -37,6 +38,7 @@ class MetricsData:
                 f'{MARKETPLACE_KEY} - ratings' : {'userid' :'user', 'date': ['rated_at']},
                 f'{MARKETPLACE_KEY} - reports' : {'userid' :'reporter', 'date': ['report_received', 'warning_sent']},
                 f'{USAGE_TOOLS_KEY} - {IRCAM}' : {'userid' : None, 'date': ['Year'], 'format': YEAR_DT_FRMT},
+                f'{USAGE_TOOLS_KEY} - {GITHUB}' : {'userid' :None, 'date': ['date']},
                 }
 
 

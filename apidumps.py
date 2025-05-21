@@ -6,7 +6,7 @@ from requests.exceptions import RequestException
 
 from datadumps import DataDumps, read_yaml
 from metricsdata import MetricsData
-from globals import USER_TOOLS_KEY, MARKETPLACE_KEY
+from globals import USER_TOOLS_KEY, USAGE_TOOLS_KEY, MARKETPLACE_KEY, GITHUB
 from dafnekeycloak import DafneKeycloak
 
 class APIDumps(DataDumps):
@@ -19,7 +19,8 @@ class APIDumps(DataDumps):
     @classmethod
     def init(cls, metr_data):
         cls.set_metric_data(metr_data)
-        cls.read_tools_api_data()
+        cls.read_dafne_tools_data()
+        cls.read_github_tools_data()
         # breakpoint()
         cls.token = DafneKeycloak().get_access_token()
         cls.read_nft_items()
@@ -42,9 +43,9 @@ class APIDumps(DataDumps):
             raise Exception(e)
 
     @classmethod
-    def read_tools_api_data(cls):
+    def read_dafne_tools_data(cls):
 
-        settings = read_yaml()['tools']
+        settings = read_yaml()['dafne_tools']
  
         for tool in settings:
             # breakpoint()
@@ -67,6 +68,44 @@ class APIDumps(DataDumps):
             else:
                 raise Exception('Auth request not yet implemented')
 
+    @classmethod
+    def read_github_tools_data(cls):
+
+        settings = read_yaml()['github_tools']
+        
+        base_url = settings['url']
+        h = {"Accept": "application/vnd.github.v3+json"}
+        data = []
+        for tool in settings['tools']:
+            # breakpoint()
+            tool_name = next(iter(tool))
+            tool_owner = tool[tool_name]['owner']
+            tool_repo = tool[tool_name]['repo']
+            
+            try:
+                response = cls.do_request(f"{base_url}/{tool_owner}/{tool_repo}/releases?per_page=100", headers=h)
+                
+                # breakpoint()
+                for rel in response:
+                    # breakpoint()
+                    tag = rel['tag_name']
+                    date = cls.convert_date_frmt(rel['published_at'],MetricsData.GITHUB_DT_FRMT, MetricsData.CNT_DT_FRMT)
+                    download_cnt = 0
+                    for asset in rel['assets']:
+                        # breakpoint()
+                        filename = asset['name'] 
+                        download_cnt = download_cnt + asset['download_count']
+                    
+                    data.append([tool_name,tag,date,download_cnt])
+                # breakpoint()
+            except Exception as e:
+                # breakpoint()
+                print(f"Exception {e}")
+                continue
+        # breakpoint()
+        cls.set_keyed_data(USAGE_TOOLS_KEY, GITHUB, cls.get_github_tools_df(data))
+            
+    
     @classmethod
     def get_header(cls, auth):
         if auth:

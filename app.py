@@ -36,11 +36,10 @@ def main(refresh:bool):
     creators_graph = DashCreators(metr_data.get_data(MARKETPLACE_KEY), metr_data.min_ts(), metr_data.now(), app)
     actions_graph = DashActions(metr_data, metr_data.min_ts(), metr_data.now(), app)
     sharing_graph = DashCollaborations(metr_data, metr_data.min_ts(), metr_data.now(), app)
-    tools_graph = DashTools(metr_data.get_data(USER_TOOLS_KEY), metr_data.get_data(USAGE_TOOLS_KEY, IRCAM), metr_data.get_creators(), metr_data.min_ts(), metr_data.now(), app)
+    tools_graph = DashTools(metr_data.get_data(USER_TOOLS_KEY), metr_data.get_data(USAGE_TOOLS_KEY), metr_data.get_creators(), metr_data.min_ts(), metr_data.now(), app)
     
     # breakpoint()
     
-
     # App layout
     slider = DashSlider(metr_data.min_ts(), metr_data.now())
     app.layout = html.Div(

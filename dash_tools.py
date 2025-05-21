@@ -2,7 +2,7 @@ from dash import Dash, html, dash_table, dependencies, dcc, callback, Output, In
 import pandas as pd # type: ignore
 import plotly.express as px # type: ignore
 
-from globals import SLD_ID, USER_TOOLS_GRAPH_ID, USAGE_VIEWS_TOOLS_GRAPH_ID, USAGE_DOWNLOADS_TOOLS_GRAPH_ID, thumbs, get_mask
+from globals import SLD_ID, USER_TOOLS_GRAPH_ID, USAGE_VIEWS_TOOLS_GRAPH_ID, USAGE_DOWNLOADS_TOOLS_GRAPH_ID, thumbs, get_mask, IRCAM, GITHUB
 from metricsdata import MetricsData
 
 class DashTools:
@@ -10,7 +10,8 @@ class DashTools:
 
     def __init__(self, user_tools_data, usage_tools_data, creators, min, max, app):
         self.user_tools_data = DashTools.flatten_pd(user_tools_data)
-        self.usage_tools_data = usage_tools_data
+        self.pv_usage_data = MetricsData.get_subdata(usage_tools_data, IRCAM)
+        self.dl_usage_data = DashTools.get_downloads(usage_tools_data)
         self.creators = creators
         self.usage_tools_per_creator()
         # breakpoint()
@@ -30,7 +31,23 @@ class DashTools:
             dependencies.Input(SLD_ID, "value")
             )(self.usage_downloads_tools_tl_updt)
         
-    
+    @classmethod
+    def get_downloads(cls, data):
+        # Gets downloads per year from GitHub data structure and merges
+        # with the Data provided by IRCAM
+        github_data = MetricsData.get_subdata(data, GITHUB).copy()
+        github_data['Year'] = pd.to_datetime(github_data['date'].dt.year, utc=True, format=MetricsData.YEAR_DT_FRMT)
+        result = github_data.groupby(['name', 'Year'], as_index=False)['download_cnt'].sum()
+        result = result.rename(columns={
+            'name': 'Projects',
+            'download_cnt': 'Downloads'
+        })
+        result['Page Views'] = 0
+        usage_data = pd.concat([MetricsData.get_subdata(data, IRCAM), result], ignore_index=True)
+        # breakpoint()
+        usage_data = usage_data.groupby(['Projects', 'Year'], as_index=False).sum()
+        return usage_data
+
     @classmethod
     def flatten_pd(cls, data):
         df = pd.DataFrame(columns=["tool","user", "access_date"])
@@ -83,12 +100,18 @@ class DashTools:
         else:
             start = tss[0]
             end = tss[1]
-        # breakpoint()
-        mask = get_mask(self.usage_tools_data.Year, start, end, is_year=True)
+
+        if field == 'Page Views':
+            usage_data = self.pv_usage_data
+        else:
+            usage_data = self.dl_usage_data
+            # breakpoint()
+
+        mask = get_mask(usage_data.Year, start, end, is_year=True)
         
+        # Use a copy of the data since we are changing type for 'Year'
+        usage_dt = usage_data.copy().loc[mask]
         # Get just the year as string
-        # usage_dt = self.usage_tools_data.loc[mask]
-        usage_dt = self.usage_tools_data.copy().loc[mask]
         usage_dt['Year'] = usage_dt['Year'].dt.year.astype(str)
 
         df_totals = usage_dt.groupby('Projects', as_index=False).agg({field: 'sum'})
@@ -99,7 +122,6 @@ class DashTools:
         df_long['Year'] = pd.Categorical(df_long['Year'], categories=['2023', '2024', '2025', 'Total'], ordered=True)
 
         # Plot
-        # breakpoint()
         fig = None
         try:
             fig = px.bar(df_long, x='Year', y=field, color='Projects', barmode='group')
