@@ -74,7 +74,7 @@ class DataDumps:
     
     @classmethod
     def get_mp_nfts_df(cls, data):
-        df = pd.DataFrame(columns=['id', 'name', 'type', 'creator', 'creator_name', 'price', 'royalty_value', 'token_id', 'chainid'])
+        df = pd.DataFrame(columns=['id', 'name', 'creator', 'creator_name', 'price', 'royalty_value', 'token_id', 'chainid'])
         df = df.astype({"creator_name": "str"})
         for tuple in data:
             df.loc[len(df)] = tuple

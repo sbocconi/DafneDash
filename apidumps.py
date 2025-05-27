@@ -145,7 +145,7 @@ class APIDumps(DataDumps):
                 token_id = item['token_id']
                 chainid = item['chainid']
 
-                data.append([id, item_name, creator, creator, creator_name, price, royalty_value, token_id, chainid])
+                data.append([id, item_name, creator, creator_name, price, royalty_value, token_id, chainid])
             cls.set_keyed_data(MARKETPLACE_KEY, mp_api_name, cls.get_mp_nfts_df(data))
             # breakpoint()
             

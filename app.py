@@ -12,8 +12,9 @@ from dash_marketplace import DashMarketPlace
 from dash_creators import DashCreators
 from dash_actions import DashActions
 from dash_collaborations import DashCollaborations
+from BlockChainMetrics.blockchain_metrics import calculate_metrics
 
-def main(refresh:bool):
+def main(refresh:bool, blockchain:bool):
     # Initialize the app
     
     metr_data = MetricsData.read_metrics(refresh=refresh)
@@ -39,6 +40,10 @@ def main(refresh:bool):
     tools_graph = DashTools(metr_data.get_data(USER_TOOLS_KEY), metr_data.get_data(USAGE_TOOLS_KEY), metr_data.get_creators(), metr_data.min_ts(), metr_data.now(), app)
     
     # breakpoint()
+    if blockchain:
+        creators = [int(a,16) for a in set(metr_data.get_data(MARKETPLACE_KEY,'nft_items')['creator'])]
+        calculate_metrics(None, False, 'all', creators)
+        breakpoint()
     
     # App layout
     slider = DashSlider(metr_data.min_ts(), metr_data.now())
@@ -72,6 +77,15 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        '-b', '--blockchain',
+        dest='blockchain',
+        action='store_true',
+        required=False,
+        default=False,
+        help='specifies whether to fetch transaction metrics from polygon and sepolia',
+    )
+
+    parser.add_argument(
         '-r', '--refresh',
         dest='refresh',
         action='store_true',
@@ -98,7 +112,7 @@ if __name__ == "__main__":
         exit(-1)
 
 
-    main(refresh=args.refresh)
+    main(refresh=args.refresh, blockchain=args.blockchain)
 
 # TODO
 # Save the graphs https://gist.github.com/exzhawk/33e5dcfc8859e3b6ff4e5269b1ba0ba4
