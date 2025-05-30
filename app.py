@@ -36,6 +36,7 @@ def main(refresh:bool, blockchain:bool, dashboard:bool):
     
     if dashboard:
         # breakpoint()
+        app = Dash(__name__)
         reg_graph = DashRegistrations(metr_data.get_data(CNTMGMT_KEY,'user-registrations'), metr_data.get_data(CNTMGMT_KEY, EVENT_FLNM), metr_data.min_ts(), metr_data.now(), app)
         marketplace_graph = DashMarketPlace(metr_data, metr_data.min_ts(), metr_data.now(), app)    
         creators_graph = DashCreators(metr_data.get_data(MARKETPLACE_KEY), metr_data.min_ts(), metr_data.now(), app)
@@ -47,7 +48,7 @@ def main(refresh:bool, blockchain:bool, dashboard:bool):
         # see this: https://github.com/plotly/plotly.py/issues/3441
         go.Figure(layout=dict(template='plotly'))
 
-        app = Dash(__name__)
+        
     
         # App layout
         slider = DashSlider(metr_data.min_ts(), metr_data.now())
