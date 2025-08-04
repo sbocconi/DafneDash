@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 my_project=BlockChainMetrics
 
 git submodule update --remote --merge
